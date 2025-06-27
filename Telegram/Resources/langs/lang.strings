@@ -4617,6 +4617,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_contact_phone_after" = "Phone number will be visible once {user} adds you as a contact.";
 "lng_contact_share_phone" = "Share my phone number";
 "lng_contact_phone_will_be_shared" = "You can make your phone visible to {user}.";
+"lng_contact_is_mutual" = "This contact is a mutual contact.";
 "lng_edit_contact_title" = "Edit contact";
 "lng_edit_channel_title" = "Edit channel";
 "lng_edit_bot_title" = "Edit bot";
