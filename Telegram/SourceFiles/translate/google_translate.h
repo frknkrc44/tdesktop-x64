@@ -27,6 +27,7 @@ class GTranslate : public QObject {
             delete manager;
         }
         void translate(QString from, QString to, QString query, TranslationCallback onFinished);
+        std::string replaceLangCode(const std::string& lang);
 
 
     private:
