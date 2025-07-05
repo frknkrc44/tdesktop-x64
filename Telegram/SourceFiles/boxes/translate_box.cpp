@@ -233,7 +233,7 @@ void TranslateBox(
 		auto useGTApi = GetEnhancedBool("use_gt_api");
 
 		if (useGTApi) {
-			auto result = [&showText](QString result) {
+			auto result = [=](QString result) {
 				showText(TextWithEntities{ .text = result });
 			};
 
