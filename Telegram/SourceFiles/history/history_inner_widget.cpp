@@ -2403,7 +2403,10 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 			leaderOrSelf,
 			_controller);
 	} else if (leaderOrSelf) {
-		HistoryView::MaybeAddWhenEditedForwardedAction(_menu, leaderOrSelf, _controller);
+		HistoryView::MaybeAddWhenEditedForwardedAction(
+			_menu,
+			leaderOrSelf,
+			_controller);
 	}
 
 	const auto addItemActions = [&](
@@ -3405,19 +3408,6 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 			_menu,
 			textItem ? textItem : _dragStateItem,
 			!added);
-	}
-
-	if (hasWhoReactedItem) {
-		HistoryView::AddWhoReactedAction(
-			_menu,
-			this,
-			leaderOrSelf,
-			_controller);
-	} else if (leaderOrSelf) {
-		HistoryView::MaybeAddWhenEditedForwardedAction(
-			_menu,
-			leaderOrSelf,
-			_controller);
 	}
 
 	if (_menu->empty()) {
