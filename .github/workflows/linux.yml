@@ -1,27 +1,46 @@
-name: Build Telegram Desktop
+name: Linux Build
 
 on:
   push:
-    branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'changelog.txt'
+      - 'LEGAL'
+      - 'LICENSE'
+      - '.github/**'
+      - '!.github/workflows/linux.yml'
+      - 'snap/**'
+      - 'Telegram/build/**'
+      - '!Telegram/build/docker/centos_env/**'
+      - 'Telegram/Resources/uwp/**'
+      - 'Telegram/Resources/winrc/**'
+      - 'Telegram/SourceFiles/platform/win/**'
+      - 'Telegram/SourceFiles/platform/mac/**'
+      - 'Telegram/Telegram/**'
+      - 'Telegram/configure.bat'
+      - 'Telegram/Telegram.plist'
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build Telegram Desktop
+  linux:
+    name: Rocky Linux 8
     runs-on: ubuntu-latest
 
     env:
+      UPLOAD_ARTIFACT: "true"
+      ONLY_CACHE: "false"
       IMAGE_TAG: tdesktop:centos_env
-      BUILD_TYPE: Release  # Cambiamos de Debug a Release
+      BUILD_TYPE: "Release"  # Cambiado de Debug a Release
 
     steps:
-      - name: Checkout code
+      - name: Clone repository
         uses: actions/checkout@v4
         with:
           repository: nubesurrealista/tdesktop-x64
           submodules: recursive
 
-      - name: Set up build environment
+      - name: First set up
         run: |
           sudo apt update
           curl -sSL https://install.python-poetry.org | python3 -
@@ -31,35 +50,36 @@ jobs:
           echo "$DOCKERFILE" > Dockerfile
 
       - name: Free up disk space
-        uses: jlumbroso/free-disk-space@v1
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
           tool-cache: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
+      - name: Libraries cache
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/.buildx-cache
-          key: ${{ runner.OS }}-docker-${{ hashFiles('Telegram/build/docker/centos_env/**') }}
-          restore-keys: ${{ runner.OS }}-docker-
+          key: ${{ runner.OS }}-libs-${{ hashFiles('Telegram/build/docker/centos_env/**') }}
+          restore-keys: ${{ runner.OS }}-libs-
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: Telegram/build/docker/centos_env
-          load: true
+          load: ${{ env.ONLY_CACHE == 'false' }}
           tags: ${{ env.IMAGE_TAG }}
           cache-from: type=local,src=${{ runner.temp }}/.buildx-cache
           cache-to: type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
 
-      - name: Update cache
+      - name: Move cache
         run: |
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache{-new,}
 
       - name: Build Telegram Desktop
+        if: env.ONLY_CACHE == 'false'
         run: |
           docker run --rm \
           -u $(id -u) \
@@ -68,6 +88,8 @@ jobs:
           $IMAGE_TAG \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -D CMAKE_C_FLAGS_RELEASE="-O3" \
+          -D CMAKE_CXX_FLAGS_RELEASE="-O3" \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           -D TDESKTOP_API_TEST=ON \
@@ -75,27 +97,28 @@ jobs:
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF
 
       - name: Verify build
+        if: env.ONLY_CACHE == 'false'
         run: |
           filePath="out/${{ env.BUILD_TYPE }}/Telegram"
           if test -f "$filePath"; then
-            echo "Build successful!"
-            
-            # Mostrar información del binario
-            ls -lh "$filePath"
-            file "$filePath"
+            echo "Build successfully done! :)"
+            size=$(stat -c %s "$filePath")
+            echo "File size of ${filePath}: ${size} Bytes."
           else
-            echo "Build failed - output file not found"
+            echo "Build error, output file does not exist."
             exit 1
           fi
 
       - name: Package artifact
+        if: env.UPLOAD_ARTIFACT == 'true'
         run: |
+          cd out/${{ env.BUILD_TYPE }}
           mkdir -p artifact
-          cp out/${{ env.BUILD_TYPE }}/{Telegram,Updater} artifact/
-          tar czf telegram-desktop.tar.gz -C artifact .
+          mv {Telegram,Updater} artifact/
 
       - name: Upload artifact
+        if: env.UPLOAD_ARTIFACT == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-Desktop
-          path: telegram-desktop.tar.gz
+          path: out/${{ env.BUILD_TYPE }}/artifact/
