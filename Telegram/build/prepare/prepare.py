@@ -1622,7 +1622,7 @@ win:
         -confirm-license ^
         -static ^
         -static-runtime ^
-        -opengl es2 -no-angle ^
+        -opengl desktop ^
         -I "%ANGLE_DIR%\\include" ^
         -D "KHRONOS_STATIC=" ^
         -D "DESKTOP_APP_QT_STATIC_ANGLE=" ^
