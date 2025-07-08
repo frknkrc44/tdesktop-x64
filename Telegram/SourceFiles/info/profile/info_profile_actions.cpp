@@ -2282,8 +2282,23 @@ Ui::MultiSlideTracker DetailsFiller::fillDiscussionButtons(
 	AddMainButton(
 		_wrap,
 		tr::lng_profile_view_discussion(),
-		std::move(viewDiscussionVisible),
+		rpl::duplicate(viewDiscussionVisible),
 		std::move(viewDiscussion),
+		tracker);
+
+	// Add join group button logic
+	auto joinGroupVisible = rpl::combine(
+		AmInChannelValue(channel) | rpl::map(!_1),
+		rpl::duplicate(viewDiscussionVisible) | rpl::map(!_1)
+	) | rpl::map([](bool notInChannel, bool discussionNotVisible) {
+		return notInChannel && discussionNotVisible;
+	});
+	
+	AddMainButton(
+		_wrap,
+		tr::lng_profile_join_group(),
+		std::move(joinGroupVisible),
+		[=] { channel->session().api().joinChannel(channel); },
 		tracker);
 
 	if (const auto forum = channel->forum()) {
