@@ -31,11 +31,12 @@ void GTranslate::translate(QString from, QString to, QString query, TranslationC
 		(*manager).setProxy(LocaleProxy);
 	}
 
-    query.replace(QRegularExpression("\\s"), "+");
     std::stringstream ss;
-    ss << "https://translate.google.com/m?sl=" << from.toStdString()
+    ss  << "https://translate.google.com/translate_a/single?dj=1"
+        << "&q=" << QUrl::toPercentEncoding(query).toStdString()
+        << "&sl=" << from.toStdString()
         << "&tl=" << replaceLangCode(to.toStdString())
-        << "&q=" << query.toStdString();
+        << "&ie=UTF-8&oe=UTF-8&client=at&dt=t&otf=2";
 
     auto url = ss.str();
 
@@ -44,7 +45,7 @@ void GTranslate::translate(QString from, QString to, QString query, TranslationC
         request.setRawHeader(key.toUtf8(), value.toUtf8());
     };
 
-    setHeader("User-Agent", "Mozilla/5.0 (X11; U; Linux armv7l; no-NO; rv:1.9.2.3pre) Gecko/20100723 Firefox/3.5 Maemo Browser 1.7.4.8 RX-51 N900");
+    setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0");
     setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
     setHeader("Accept-Language", "en-US");
     setHeader("Alt-Used", "translate.google.com");
@@ -58,18 +59,28 @@ void GTranslate::translate(QString from, QString to, QString query, TranslationC
     connect(reply, &QNetworkReply::finished, this, [this, reply, onFinished]() {
             if (reply->error() == QNetworkReply::NoError) {
                 auto all = reply->readAll();
-                auto rc = QString::fromStdString("<div class=\"result-container\">");
-                auto idx = all.indexOf(rc.toStdString().c_str());
-                auto right = all.mid(idx, idx + rc.size());
-                auto left = right.mid(rc.size(), right.indexOf("</div>") - rc.size());
+                auto json = QJsonDocument::fromJson(all);
+                auto sentences = json["sentences"];
+                if (sentences.isNull() || sentences.isUndefined()) {
+                    onFinished("error: 'sentences' is null or undefined");
+                    return;
+                }
 
-                QTextDocument text;
-                text.setHtml(left);
+                std::stringstream out;
+                auto sentencesArray = sentences.toArray();
+                auto sentencesSize = sentencesArray.size();
+                for (int i = 0; i < sentencesSize; i++) {
+                    auto sentence = sentencesArray[i];
+                    auto sentenceObj = sentence.toObject();
 
-                onFinished(text.toPlainText());
+                    out << sentenceObj["trans"].toString().toStdString();
+                }
+
+                onFinished(QString::fromStdString(out.str()));
             } else {
                 onFinished(reply->errorString());
             }
             reply->deleteLater();
-        });
+        }
+    );
 }

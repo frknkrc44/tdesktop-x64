@@ -7,6 +7,8 @@ https://github.com/frknkrc44/tdesktop-x64/blob/dev/LEGAL
 #ifndef __GOOGLE_TRANSLATE_H__
 #define __GOOGLE_TRANSLATE_H__
 
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 #include <QString>
