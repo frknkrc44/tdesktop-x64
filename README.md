@@ -53,6 +53,11 @@ Then your language translation filename is `de.json` or something like that.
 * [Official Telegram Channel](https://t.me/tg_x64)
 * [Official discussion group](https://t.me/tg_x64_chat)
 
+## Credits
+
+* [dic1911](https://github.com/dic1911) for Google Translate API code
+* [nubesurrealista](https://github.com/nubesurrealista) for CI optimizations
+
 ## Sponsors
 <a href="https://www.jetbrains.com/?from=64Gram">
      <img src="https://www.jetbrains.com/icon-512.png"  alt="JetBrains" width="150"/>
