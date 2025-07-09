@@ -693,6 +693,14 @@ bool PeerData::canCreatePolls() const {
 	return Data::CanSend(this, ChatRestriction::SendPolls);
 }
 
+bool PeerData::canCreateTodoLists() const {
+	if (isMonoforum() || isBroadcast()) {
+		return false;
+	}
+	return session().premium()
+		&& (Data::CanSend(this, ChatRestriction::SendPolls) || isUser());
+}
+
 bool PeerData::canCreateTopics() const {
 	if (const auto channel = asChannel()) {
 		return channel->isForum()
@@ -1710,7 +1718,9 @@ int PeerData::starsPerMessage() const {
 
 int PeerData::starsPerMessageChecked() const {
 	if (const auto channel = asChannel()) {
-		if (channel->adminRights() || channel->amCreator()) {
+		if (channel->adminRights()
+			|| channel->amCreator()
+			|| amMonoforumAdmin()) {
 			return 0;
 		}
 	}

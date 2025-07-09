@@ -91,7 +91,7 @@ FROM builder AS patches
 RUN git init patches \
 	&& cd patches \
 	&& git remote add origin https://github.com/desktop-app/patches.git \
-	&& git fetch --depth=1 origin a405719f0963abf7cb93354a390617c0f0d90f17 \
+	&& git fetch --depth=1 origin 1ffcb17817a2cab167061d530703842395291e69 \
 	&& git reset --hard FETCH_HEAD \
 	&& rm -rf .git
 
@@ -760,7 +760,6 @@ RUN git clone -b v$QT --depth=1 https://github.com/qt/qt5.git \
 	&& cmake -B build . \
 		-DCMAKE_INSTALL_PREFIX=/usr/local \
 		-DBUILD_SHARED_LIBS=OFF \
-		-DQT_GENERATE_SBOM=OFF \
 		-DQT_QPA_PLATFORMS="wayland;xcb" \
 		-DINPUT_libpng=qt \
 		-DINPUT_harfbuzz=qt \
@@ -817,7 +816,7 @@ RUN git init tg_owt \
 	&& rm -rf tg_owt
 
 FROM builder AS ada
-RUN git clone -b v3.2.2 --depth=1 https://github.com/ada-url/ada.git \
+RUN git clone -b v3.2.4 --depth=1 https://github.com/ada-url/ada.git \
 	&& cd ada \
 	&& cmake -B build . \
         -D ADA_TESTING=OFF \
