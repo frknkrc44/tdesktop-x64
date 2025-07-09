@@ -1,4 +1,4 @@
-﻿// Microsoft Visual C++ generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -6,17 +6,17 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#if defined(__MINGW64__) || defined(__MINGW32__)
-	// MinGW-w64, MinGW
-	#if defined(__has_include) && __has_include(<winres.h>)
-		#include <winres.h>
-	#else
-		#include <afxres.h>
-		#include <winresrc.h>
-	#endif
+#if defined(MINGW64) || defined(__MINGW32__)
+  // MinGW-w64, MinGW
+  #if defined(__has_include) && __has_include(<winres.h>)
+    #include <winres.h>
+  #else
+    #include <afxres.h>
+    #include <winresrc.h>
+  #endif
 #else
-	// MSVC, Windows SDK
-	#include <winres.h>
+  // MSVC, Windows SDK
+  #include <winres.h>
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ BEGIN
             VALUE "CompanyName", "64Gram"
             VALUE "FileDescription", "64Gram Desktop Updater"
             VALUE "FileVersion", "1.1.66.0"
-            VALUE "LegalCopyright", "Copyright (C) 2014-2022"
+            VALUE "LegalCopyright", "Copyright (C) 2014-2025"
             VALUE "ProductName", "64Gram Desktop"
             VALUE "ProductVersion", "1.1.66.0"
         END
