@@ -112,9 +112,9 @@ jobs:
           cd tg_owt
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS_DEBUG="" \
-          -DCMAKE_CXX_FLAGS_DEBUG=""
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS_RELEASE="-O3" \
+          -DCMAKE_CXX_FLAGS_RELEASE="-O3"
 
           cmake --build build --parallel
 
@@ -136,10 +136,10 @@ jobs:
           git reset --hard FETCH_HEAD
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=$PWD/build/prefix \
-          -DCMAKE_C_FLAGS_DEBUG="" \
-          -DCMAKE_CXX_FLAGS_DEBUG="" \
+          -DCMAKE_C_FLAGS_RELEASE="-O3" \
+          -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
           -DTD_E2E_ONLY=ON
 
           cmake --build build --parallel
@@ -163,10 +163,12 @@ jobs:
           fi
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_FLAGS_DEBUG="" \
-          -DCMAKE_CXX_FLAGS_DEBUG="" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_FLAGS_RELEASE="-O3" \
+          -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
           -DTDESKTOP_API_TEST=ON \
+          -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
+          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           $DEFINE
 
           cmake --build build --parallel
