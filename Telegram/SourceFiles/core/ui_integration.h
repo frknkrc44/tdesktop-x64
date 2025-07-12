@@ -64,6 +64,8 @@ public:
 	const Ui::Emoji::One *defaultEmojiVariant(
 		const Ui::Emoji::One *emoji) override;
 
+	void getTranslateResult(QString query, std::function<void(QString)> onFinished) override;
+	QString phraseTranslate() override;
 	QString phraseContextCopyText() override;
 	QString phraseContextCopyEmail() override;
 	QString phraseContextCopyLink() override;

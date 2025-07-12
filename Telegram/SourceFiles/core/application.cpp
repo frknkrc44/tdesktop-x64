@@ -173,6 +173,8 @@ Application::Application()
 , _fileOpenTimer([=] { checkFileOpen(); }) {
 	Ui::Integration::Set(&_private->uiIntegration);
 
+	translator = new GTranslate();
+
 	_platformIntegration->init();
 
 	passcodeLockChanges(
