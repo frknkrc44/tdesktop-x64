@@ -328,6 +328,21 @@ const Ui::Emoji::One *UiIntegration::defaultEmojiVariant(
 	return result;
 }
 
+void UiIntegration::getTranslateResult(QString query, std::function<void(QString)> onFinished) {
+	auto useGTApi = GetEnhancedBool("use_gt_api");
+
+	if (useGTApi) {
+		Core::App().gTranslate()->translate("auto", "tr", query, onFinished);
+	} else {
+		// do nothing for the Telegram translation method yet
+		// TODO: Add Telegram translation method
+	}
+}
+
+QString UiIntegration::phraseTranslate() {
+	return tr::lng_context_translate(tr::now);
+}
+
 QString UiIntegration::phraseContextCopyText() {
 	return tr::lng_context_copy_text(tr::now);
 }

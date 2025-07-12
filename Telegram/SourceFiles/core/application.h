@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/timer.h"
 #include "mtproto/mtproto_auth_key.h"
 #include "mtproto/mtproto_proxy_data.h"
+#include "translate/google_translate.h"
 #include "window/window_separate_id.h"
 
 class History;
@@ -141,6 +142,10 @@ public:
 	~Application();
 
 	void run();
+
+	[[nodiscard]] GTranslate* gTranslate() const {
+		return translator;
+	}
 
 	[[nodiscard]] Platform::Integration &platformIntegration() const {
 		return *_platformIntegration;
@@ -469,6 +474,8 @@ private:
 	rpl::lifetime _lifetime;
 
 	crl::time _lastNonIdleTime = 0;
+
+	GTranslate* translator;
 
 };
 
