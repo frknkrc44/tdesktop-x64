@@ -109,11 +109,9 @@ void TranslateBox(
 
 		MTP::Sender api;
 		rpl::variable<LanguageId> to;
-		GTranslate* translate;
 	};
 	const auto state = box->lifetime().make_state<State>(&peer->session());
 	state->to = ChooseTranslateTo(peer->owner().history(peer));
-	state->translate = new GTranslate();
 
 	if (!IsServerMsgId(msgId)) {
 		msgId = 0;
@@ -237,7 +235,7 @@ void TranslateBox(
 				showText(TextWithEntities{ .text = result });
 			};
 
-			state->translate->translate("auto", toTC ? "zh-Hant" : to.twoLetterCode(), text.text, result);
+			Core::App().gTranslate()->translate("auto", toTC ? "zh-Hant" : to.twoLetterCode(), text.text, result);
 		} else {
 			state->api.request(MTPmessages_TranslateText(
 				MTP_flags(flags),
