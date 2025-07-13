@@ -30,6 +30,7 @@ class GTranslate : public QObject {
         }
         void translate(QString from, QString to, QString query, TranslationCallback onFinished);
         std::string replaceLangCode(const std::string& lang);
+        std::vector<QString>* languageCodes;
 
 
     private:

@@ -315,6 +315,20 @@ namespace Settings {
 			EnhancedSettings::Write();
 		}, container->lifetime());
 
+		auto targetLangBtn = AddButtonWithIcon(
+				inner,
+				tr::lng_gt_target_language(),
+				st::settingsButtonNoIcon
+		);
+		targetLangBtn->events(
+		) | rpl::start_with_next([=](not_null<QEvent*> e) {
+			// const auto event = e->type();
+			// if (event == QEvent::UpdateLater) _AlwaysDeleteChanged.fire({});
+		}, container->lifetime());
+		targetLangBtn->addClickHandler([=] {
+			Ui::show(Box<GTranslateTargetLanguageBox>());
+		});
+
 		QString langPackBaseId = Lang::GetInstance().baseId();
 		if (langPackBaseId == "zh-hant-raw" || langPackBaseId == "zh-hans-raw") {
 			AddButtonWithIcon(

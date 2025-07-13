@@ -53,6 +53,21 @@ private:
 
 };
 
+class GTranslateTargetLanguageBox : public Ui::BoxContent {
+public:
+	GTranslateTargetLanguageBox(QWidget *parent);
+
+protected:
+	void prepare() override;
+
+private:
+	void save();
+
+	object_ptr<Ui::FlatLabel> _description = {nullptr};
+	std::shared_ptr<Ui::RadiobuttonGroup> _optionGroup;
+
+};
+
 class RadioController : public Ui::BoxContent {
 public:
 	RadioController(QWidget *parent);

@@ -133,6 +133,60 @@ void AlwaysDeleteBox::save() {
 	closeBox();
 }
 
+GTranslateTargetLanguageBox::GTranslateTargetLanguageBox(QWidget *parent) {
+}
+
+void GTranslateTargetLanguageBox::prepare() {
+	setTitle(tr::lng_gt_target_language());
+
+	addButton(tr::lng_settings_save(), [=] { save(); });
+	addButton(tr::lng_cancel(), [=] { closeBox(); });
+
+	auto y = st::boxOptionListPadding.top();
+	_description.create(
+			this,
+			tr::lng_gt_target_language_desc(tr::now),
+			st::boxLabel);
+	_description->moveToLeft(st::boxPadding.left(), y);
+
+	y += _description->height() + st::boxMediumSkip;
+
+	_optionGroup = std::make_shared<Ui::RadiobuttonGroup>(GetEnhancedInt("gt_target_lang"));
+
+	const auto button = Ui::CreateChild<Ui::Radiobutton>(
+				this,
+				_optionGroup,
+				0,
+				tr::lng_gt_target_language_default(tr::now),
+				st::autolockButton);
+	button->moveToLeft(st::boxPadding.left(), y);
+	y += button->heightNoMargins() + st::boxOptionListSkip;
+
+	auto languageCodes = Core::App().gTranslate()->languageCodes;
+	for (int i = 0; i < languageCodes->size(); i++) {
+		auto languageCode = languageCodes->at(i);
+		QLocale locale(languageCode);
+
+		const auto button = Ui::CreateChild<Ui::Radiobutton>(
+				this,
+				_optionGroup,
+				i + 1,
+				locale.nativeLanguageName() + "\n" + locale.languageToString(locale.language()),
+				st::autolockButton);
+		button->moveToLeft(st::boxPadding.left(), y);
+		button->setAllowTextLines(2);
+		y += button->heightNoMargins() + st::boxOptionListSkip;
+	}
+
+	setDimensions(st::boxWidth, st::boxMaxListHeight);
+}
+
+void GTranslateTargetLanguageBox::save() {
+	SetEnhancedValue("gt_target_lang", _optionGroup->current());
+	EnhancedSettings::Write();
+	closeBox();
+}
+
 RadioController::RadioController(QWidget *parent)
 		: _url(this, st::defaultInputField, tr::lng_formatting_link_url()) {
 }
