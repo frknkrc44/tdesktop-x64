@@ -46,7 +46,7 @@ public:
 		return true;
 	}
 	bool isDisplayed() const override {
-		return !_empty && _toggled;
+		return !_empty && (_toggled == GetEnhancedBool("show_similar_on_joined"));
 	}
 
 	void unloadHeavyPart() override;

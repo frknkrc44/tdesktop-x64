@@ -149,6 +149,21 @@ namespace Settings {
 
 		AddButtonWithIcon(
 				inner,
+				tr::lng_settings_show_similar_on_joined(),
+				st::settingsAttentionButton
+		)->toggleOn(
+				rpl::single(GetEnhancedBool("show_similar_on_joined"))
+		)->toggledChanges(
+		) | rpl::filter([=](bool toggled) {
+			return (toggled != GetEnhancedBool("show_similar_on_joined"));
+		}) | rpl::start_with_next([=](bool toggled) {
+			SetEnhancedValue("show_similar_on_joined", toggled);
+			EnhancedSettings::Write();
+			Core::Restart();
+		}, container->lifetime());
+
+		AddButtonWithIcon(
+				inner,
 				tr::lng_settings_show_repeater_option(),
 				st::settingsButtonNoIcon
 		)->toggleOn(

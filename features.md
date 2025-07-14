@@ -65,3 +65,8 @@
 61. Support sending and viewing location
 62. Sticker pack owner info
 63. Disable Premium/Stars Annoyance
+64. Google Translate support
+65. Mutual contact indicator in contacts list from [Yukigram fork](https://github.com/Revincx/yukigram/commit/025d3534cfc0592c6cdd0ebcbedb122e4510ddf7)
+66. Join group button in discussion group profile box from [Yukigram fork](https://github.com/Revincx/yukigram/commit/efac2208b0e6f87c77f48b42c52ba3d6216a3628)
+67. Show apply_to_join button if discussion group needs request to join in group profile from [Yukigram fork](https://github.com/Revincx/yukigram/commit/99d0987b74e3a9a00afc527561c6ee4b76da37d3)
+68. Hide similar channels on join message from [Yukigram](https://github.com/yukigram/yukigram/commit/5ab13301e60cdd98e8933da41ed3d82d89246e09)

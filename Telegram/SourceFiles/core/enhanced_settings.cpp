@@ -317,10 +317,11 @@ namespace EnhancedSettings {
 		settings.insert(qsl("hide_counter"), false);
 		settings.insert(qsl("use_gt_api"), false);
 		settings.insert(qsl("translate_to_tc"), false);
+		settings.insert(qsl("show_similar_on_joined"), false);
 		settings.insert(qsl("hide_stories"), false);
 		settings.insert(qsl("recent_display_limit"), 20);
 		settings.insert(qsl("screenshot_mode"), false);
-
+		
 		auto document = QJsonDocument();
 		document.setObject(settings);
 		file.write(document.toJson(QJsonDocument::Indented));
@@ -373,10 +374,11 @@ namespace EnhancedSettings {
 		settings.insert(qsl("hide_counter"), GetEnhancedBool("hide_counter"));
 		settings.insert(qsl("use_gt_api"), GetEnhancedBool("use_gt_api"));
 		settings.insert(qsl("translate_to_tc"), GetEnhancedBool("translate_to_tc"));
+		settings.insert(qsl("show_similar_on_joined"), GetEnhancedBool("show_similar_on_joined"));
 		settings.insert(qsl("hide_stories"), GetEnhancedBool("hide_stories"));
 		settings.insert(qsl("recent_display_limit"), GetEnhancedInt("recent_display_limit"));
 		settings.insert(qsl("screenshot_mode"), GetEnhancedBool("screenshot_mode"));
-
+		
 		auto document = QJsonDocument();
 		document.setObject(settings);
 		file.write(document.toJson(QJsonDocument::Indented));

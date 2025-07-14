@@ -166,6 +166,8 @@ contactsSortButton: IconButton(defaultIconButton) {
 }
 contactsSortOnlineIcon: icon{{ "contacts_online", boxTitleCloseFg }};
 contactsSortOnlineIconOver: icon{{ "contacts_online", boxTitleCloseFgOver }};
+contactsMutualIcon: icon{{ "contacts_is_mutual", boxTitleCloseFg }};
+contactsMutualIconOver: icon{{ "contacts_is_mutual", boxTitleCloseFgOver }};
 
 membersMarginTop: 10px;
 membersMarginBottom: 10px;

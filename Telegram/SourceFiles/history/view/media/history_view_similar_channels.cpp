@@ -134,7 +134,7 @@ void SimilarChannels::clickHandlerPressedChanged(
 }
 
 void SimilarChannels::draw(Painter &p, const PaintContext &context) const {
-	if (!_toggled) {
+	if (!(_toggled == GetEnhancedBool("show_similar_on_joined"))) {
 		return;
 	}
 	const auto large = Ui::BubbleCornerRounding::Large;
@@ -526,7 +526,7 @@ QSize SimilarChannels::countOptimalSize() {
 	_moreThumbnailsValid = 0;
 	using Flag = ChannelDataFlag;
 	_toggled = (channel->flags() & Flag::SimilarExpanded) ? 1 : 0;
-	if (_empty || !_toggled) {
+	if (!isDisplayed()) {
 		return {};
 	}
 
@@ -604,7 +604,7 @@ QSize SimilarChannels::countOptimalSize() {
 }
 
 QSize SimilarChannels::countCurrentSize(int newWidth) {
-	if (!_toggled) {
+	if (!isDisplayed()) {
 		return {};
 	}
 	_scrollMax = std::max(int(_fullWidth) - newWidth, 0);

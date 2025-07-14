@@ -3015,7 +3015,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 		if (item && item->id > 0 && isUponSelected != 2 && isUponSelected != -2) {
 			_menu->addAction(tr::lng_context_view_as_json(tr::now), [=] {
 				HistoryView::ViewAsJSON(controller, itemId);
-			}, &st::menuIconLink);
+			}, &st::menuIcon64gJson);
 		}
 	} else { // maybe cursor on some text history item?
 		const auto albumPartItem = _dragStateItem;
@@ -3390,7 +3390,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 		if (item && item->id > 0 && isUponSelected != 2 && isUponSelected != -2) {
 			_menu->addAction(tr::lng_context_view_as_json(tr::now), [=] {
 				HistoryView::ViewAsJSON(controller, itemId);
-			}, &st::menuIconLink);
+			}, &st::menuIcon64gJson);
 		}
 	}
 

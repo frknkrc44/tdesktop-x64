@@ -246,6 +246,7 @@ public:
 	[[nodiscard]] std::unique_ptr<PeerListRow> createSearchRow(
 		not_null<PeerData*> peer) override final;
 	void rowClicked(not_null<PeerListRow*> row) override;
+    void rowRightActionClicked(not_null<PeerListRow*> row) override;
 	bool trackSelectedList() override {
 		return !_stories;
 	}

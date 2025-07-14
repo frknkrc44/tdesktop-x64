@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/widgets/menu/menu_add_action_callback_factory.h"
 #include "ui/widgets/checkbox.h"
 #include "ui/widgets/popup_menu.h"
+#include "ui/effects/ripple_animation.h"
 #include "ui/wrap/padding_wrap.h"
 #include "ui/painter.h"
 #include "ui/ui_utility.h"
@@ -195,6 +196,76 @@ void PeerListRowWithLink::rightActionPaint(
 	p.setPen(actionSelected ? st::defaultLinkButton.overColor : st::defaultLinkButton.color);
 	p.drawTextLeft(x, y, outerWidth, _action, _actionWidth);
 }
+
+class MutualContactRow final : public PeerListRow
+{
+public:
+    using PeerListRow::PeerListRow;
+
+    QSize rightActionSize() const override
+    {
+        return QSize(st::contactsMutualIcon.width(), st::contactsMutualIcon.height());
+    }
+
+    QMargins rightActionMargins() const override
+    {
+        return QMargins(
+            st::contactsCheckPosition.x(),
+            (st::peerListBoxItem.height - st::contactsMutualIcon.height()) / 2,
+            st::defaultPeerListItem.photoPosition.x() + st::contactsCheckPosition.x(),
+            0);
+    }
+
+    void rightActionAddRipple(
+               QPoint point,
+               Fn<void()> updateCallback) {
+       if (!_ripple) {
+               const auto iconSize = rightActionSize();
+               // Make ripple area slightly larger than the icon for better visual feedback
+               const auto rippleSize = QSize(
+                   iconSize.width() + 16,
+                   iconSize.height() + 16);
+               auto mask = Ui::RippleAnimation::EllipseMask(rippleSize);
+               _ripple = std::make_unique<Ui::RippleAnimation>(
+                       st::defaultRippleAnimation,
+                       std::move(mask),
+                       std::move(updateCallback));
+       }
+       // Adjust point to center the ripple on the icon
+       const auto iconSize = rightActionSize();
+       const auto adjustedPoint = point - QPoint(8, 8);
+       _ripple->add(adjustedPoint);
+    }
+
+    void rightActionStopLastRipple() {
+       if (_ripple) {
+               _ripple->lastStop();
+       }
+    }
+
+    void rightActionPaint(
+        Painter &p,
+        int x,
+        int y,
+        int outerWidth,
+        bool selected,
+        bool actionSelected) override
+    {
+        if (_ripple) {
+               // Offset ripple painting to center it on the icon
+               _ripple->paint(p, x - 8, y - 8, outerWidth);
+               if (_ripple->empty()) {
+                       _ripple.reset();
+               }
+        }
+        const auto &icon = actionSelected
+                               ? st::contactsMutualIconOver
+                               : st::contactsMutualIcon;
+        icon.paint(p, style::rtlpoint(QPoint(x, y), outerWidth), outerWidth);
+    }
+private:
+       std::unique_ptr<Ui::RippleAnimation> _ripple;
+};
 
 PeerListGlobalSearchController::PeerListGlobalSearchController(
 	not_null<Main::Session*> session)
@@ -703,6 +774,16 @@ void ContactsBoxController::rowClicked(not_null<PeerListRow*> row) {
 	}
 }
 
+void ContactsBoxController::rowRightActionClicked(not_null<PeerListRow*> row) {
+    if (const auto user = row->peer()->asUser()) {
+        if (user->flags() & UserDataFlag::MutualContact) {
+            if (const auto show = delegate()->peerListUiShow()) {
+                show->showToast(tr::lng_contact_is_mutual(tr::now));
+            }
+        }
+    }
+}
+
 void ContactsBoxController::setSortMode(SortMode mode) {
 	if (_sortMode == mode) {
 		return;
@@ -767,8 +848,13 @@ bool ContactsBoxController::appendRow(not_null<UserData*> user) {
 }
 
 std::unique_ptr<PeerListRow> ContactsBoxController::createRow(
-		not_null<UserData*> user) {
-	return std::make_unique<PeerListRow>(user);
+    not_null<UserData *> user)
+{
+    if (user->flags() & UserDataFlag::MutualContact)
+    {
+        return std::make_unique<MutualContactRow>(user);
+    }
+    return std::make_unique<PeerListRow>(user);
 }
 
 RecipientMoneyRestrictionError WriteMoneyRestrictionError(
