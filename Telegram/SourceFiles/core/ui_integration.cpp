@@ -20,6 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/text/text_custom_emoji.h"
 #include "ui/text/text_utilities.h"
 #include "ui/basic_click_handlers.h"
+#include "ui/toast/toast.h"
 #include "ui/emoji_config.h"
 #include "lang/lang_keys.h"
 #include "platform/platform_specific.h"
@@ -31,7 +32,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/mtproto_config.h"
 #include "window/window_controller.h"
 #include "window/window_session_controller.h"
+#include "spellcheck/spellcheck_types.h"
 #include "mainwindow.h"
+#include "apiwrap.h"
 
 namespace Core {
 namespace {
@@ -330,12 +333,35 @@ const Ui::Emoji::One *UiIntegration::defaultEmojiVariant(
 
 void UiIntegration::getTranslateResult(QString query, std::function<void(QString)> onFinished) {
 	auto useGTApi = GetEnhancedBool("use_gt_api");
+	auto languageCodes = Core::App().gTranslate()->languageCodes;
+		auto targetLangIndex = GetEnhancedInt("gt_target_lang");
+		auto targetLang = targetLangIndex == 0
+			? Core::App().settings().translateTo().twoLetterCode()
+			: languageCodes->at(targetLangIndex - 1);
+
+	auto toTC = GetEnhancedBool("translate_to_tc"); // Override translate setting :)
+	if (toTC && targetLang == "zh") {
+		targetLang = "zh-Hant";
+	}
 
 	if (useGTApi) {
-		Core::App().gTranslate()->translate("auto", "tr", query, onFinished);
+		Core::App().gTranslate()->translate("auto", targetLang, query, onFinished);
 	} else {
-		// do nothing for the Telegram translation method yet
-		// TODO: Add Telegram translation method
+		// Partially copied from https://github.com/kukuruzka165/materialgram/commit/abb76fe4c9cbe0f9bbec48e8ca769fae3a856b11
+		auto session = Core::App().activeWindow()->maybeSession();
+		session->api().request(MTPmessages_TranslateText(
+					MTP_flags(MTPmessages_TranslateText::Flag::f_text),
+					MTPInputPeer(),
+					MTP_vector<MTPint>(),
+					MTP_vector<MTPTextWithEntities>(1, MTP_textWithEntities(
+						MTP_string(query),
+						MTP_vector<MTPMessageEntity>())),
+					MTP_string(targetLang)
+				)).done([=](const MTPmessages_TranslatedText& result) {
+					onFinished(result.data().vresult().v[0].data().vtext().v);
+				}).fail([=] {
+					Ui::Toast::Show("Translation error");
+				}).send();
 	}
 }
 

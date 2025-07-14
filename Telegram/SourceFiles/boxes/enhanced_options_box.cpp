@@ -151,34 +151,48 @@ void GTranslateTargetLanguageBox::prepare() {
 
 	y += _description->height() + st::boxMediumSkip;
 
-	_optionGroup = std::make_shared<Ui::RadiobuttonGroup>(GetEnhancedInt("gt_target_lang"));
+	auto targetLang = GetEnhancedInt("gt_target_lang");
+	_optionGroup = std::make_shared<Ui::RadiobuttonGroup>(targetLang);
 
-	const auto button = Ui::CreateChild<Ui::Radiobutton>(
-				this,
-				_optionGroup,
-				0,
-				tr::lng_gt_target_language_default(tr::now),
-				st::autolockButton);
-	button->moveToLeft(st::boxPadding.left(), y);
-	y += button->heightNoMargins() + st::boxOptionListSkip;
+	auto wrap = object_ptr<Ui::VerticalLayout>(this);
+	const auto content = wrap.data();
+	setInnerWidget(std::move(wrap), y);
+
+	content->add(object_ptr<Ui::Radiobutton>(
+			content,
+			_optionGroup,
+			0,
+			tr::lng_gt_target_language_default(tr::now),
+			st::autolockButton), st::defaultCheckbox.margin);
 
 	auto languageCodes = Core::App().gTranslate()->languageCodes;
 	for (int i = 0; i < languageCodes->size(); i++) {
 		auto languageCode = languageCodes->at(i);
-		QLocale locale(languageCode);
 
-		const auto button = Ui::CreateChild<Ui::Radiobutton>(
-				this,
+		if (languageCode == "jw") {
+			languageCode = "jv";
+		}
+
+		QLocale locale(languageCode);
+		auto languageString = locale.languageToString(locale.language());
+		bool isLangWasC = false;
+		if (languageString == "C") {
+			isLangWasC = true;
+			languageString = languageCode;
+		}
+
+		const auto button = content->add(object_ptr<Ui::Radiobutton>(
+				content,
 				_optionGroup,
 				i + 1,
-				locale.nativeLanguageName() + "\n" + locale.languageToString(locale.language()),
-				st::autolockButton);
-		button->moveToLeft(st::boxPadding.left(), y);
+				isLangWasC ? languageString : (locale.nativeLanguageName() + "\n" + languageString),
+				st::autolockButton), st::defaultCheckbox.margin);
 		button->setAllowTextLines(2);
-		y += button->heightNoMargins() + st::boxOptionListSkip;
 	}
 
-	setDimensions(st::boxWidth, st::boxMaxListHeight);
+	setDimensionsToContent(st::boxWidth, content);
+	setDimensions(st::boxWideWidth, st::boxMaxListHeight);
+	scrollToWidget(content->widgetAt(targetLang));
 }
 
 void GTranslateTargetLanguageBox::save() {
