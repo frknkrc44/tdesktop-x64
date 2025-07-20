@@ -1535,6 +1535,12 @@ release:
 """)
 
 if qt < '6':
+    if win:
+        stage("tg_angle", """
+    md tg_angle
+    md tg_angle\\include
+""")
+
     stage('qt_' + qt, """
     git clone -b v$QT-lts-lgpl https://github.com/qt/qt5.git qt_$QT
     cd qt_$QT
