@@ -1536,9 +1536,30 @@ release:
 
 if qt < '6':
     if win:
-        stage("tg_angle", """
-    md tg_angle
-    md tg_angle\\include
+        stage('tg_angle', """
+win:
+    git clone https://github.com/desktop-app/tg_angle.git
+    cd tg_angle
+    git checkout e3f59e8d0c
+    mkdir out
+    cd out
+    mkdir Debug
+    cd Debug
+    cmake -G Ninja ^
+        -DCMAKE_BUILD_TYPE=Debug ^
+        -DTG_ANGLE_SPECIAL_TARGET=%SPECIAL_TARGET% ^
+        -DTG_ANGLE_ZLIB_INCLUDE_PATH=%LIBS_DIR%/zlib ../..
+    ninja
+release:
+    cd ..
+    mkdir Release
+    cd Release
+    cmake -G Ninja ^
+        -DCMAKE_BUILD_TYPE=Release ^
+        -DTG_ANGLE_SPECIAL_TARGET=%SPECIAL_TARGET% ^
+        -DTG_ANGLE_ZLIB_INCLUDE_PATH=%LIBS_DIR%/zlib ../..
+    ninja
+    cd ..\\..\\..
 """)
 
     stage('qt_' + qt, """
