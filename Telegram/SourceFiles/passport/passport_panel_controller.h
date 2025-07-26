@@ -174,13 +174,13 @@ private:
 
 	std::unique_ptr<Panel> _panel;
 	Fn<bool()> _panelHasUnsavedChanges;
-	QPointer<Ui::BoxContent> _confirmForgetChangesBox;
-	std::vector<Ui::BoxPointer> _editScopeBoxes;
+	base::weak_qptr<Ui::BoxContent> _confirmForgetChangesBox;
+	std::vector<base::weak_qptr<Ui::BoxContent>> _editScopeBoxes;
 	Scope *_editScope = nullptr;
 	const Value *_editValue = nullptr;
 	const Value *_editDocument = nullptr;
-	Ui::BoxPointer _scopeDocumentTypeBox;
-	std::map<not_null<const Value*>, Ui::BoxPointer> _verificationBoxes;
+	base::weak_qptr<Ui::BoxContent> _scopeDocumentTypeBox;
+	std::map<not_null<const Value*>, base::weak_qptr<Ui::BoxContent>> _verificationBoxes;
 
 	Ui::BoxPointer _resetBox;
 

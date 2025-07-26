@@ -166,7 +166,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_FLAGS_RELEASE="-O3" \
           -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
-          -DTDESKTOP_API_TEST=ON \
+          -DTDESKTOP_API_TEST=OFF \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           $DEFINE

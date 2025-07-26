@@ -240,7 +240,7 @@ private:
 		Role role,
 		not_null<ParticipantsAdditionalData*> additional);
 
-	QPointer<Ui::BoxContent> showBox(object_ptr<Ui::BoxContent> box) const;
+	base::weak_qptr<Ui::BoxContent> showBox(object_ptr<Ui::BoxContent> box) const;
 
 	void prepareChatRows(not_null<ChatData*> chat);
 	void rebuildChatRows(not_null<ChatData*> chat);
@@ -302,9 +302,9 @@ private:
 	std::unique_ptr<ParticipantsOnlineSorter> _onlineSorter;
 	rpl::variable<int> _onlineCountValue;
 	rpl::variable<int> _fullCountValue;
-	Ui::BoxPointer _editBox;
-	Ui::BoxPointer _addBox;
-	QPointer<Ui::BoxContent> _editParticipantBox;
+	base::weak_qptr<Ui::BoxContent> _editBox;
+	base::weak_qptr<Ui::BoxContent> _addBox;
+	base::weak_qptr<Ui::BoxContent> _editParticipantBox;
 
 	std::unique_ptr<PeerListStories> _stories;
 
