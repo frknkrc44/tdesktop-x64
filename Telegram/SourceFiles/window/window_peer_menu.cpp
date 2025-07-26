@@ -939,8 +939,7 @@ void Filler::addExportChat() {
 
 void Filler::addTranslate() {
 	if (_peer->translationFlag() != PeerData::TranslationFlag::Disabled
-		|| !_peer->session().premium()
-		|| GetEnhancedBool("use_gt_api")
+		|| !(_peer->session().premium() || GetEnhancedBool("use_gt_api"))
 		|| !Core::App().settings().translateChatEnabled()) {
 		return;
 	}
