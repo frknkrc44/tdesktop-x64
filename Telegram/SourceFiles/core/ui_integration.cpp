@@ -15,7 +15,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/sandbox.h"
 #include "core/click_handler_types.h"
 #include "data/stickers/data_custom_emoji.h"
+#include "data/data_forum_topic.h"
 #include "data/data_session.h"
+#include "history/history.h"
 #include "iv/iv_instance.h"
 #include "ui/text/text_custom_emoji.h"
 #include "ui/text/text_utilities.h"
@@ -331,13 +333,26 @@ const Ui::Emoji::One *UiIntegration::defaultEmojiVariant(
 	return result;
 }
 
-void UiIntegration::getTranslateResult(QString query, std::function<void(QString)> onFinished) {
+void UiIntegration::getTranslateResult(QString query, bool usedForInput, std::function<void(QString)> onFinished) {
+	auto getChatTranslateFrom = [=] {
+		if (usedForInput) {
+			auto chat = Core::App().activeWindow()->sessionController()->activeChatCurrent();
+
+			if (chat.topic())
+				return chat.topic()->history()->translateOfferedFrom().twoLetterCode();
+
+			if (chat.history())
+				return chat.history()->translateOfferedFrom().twoLetterCode();
+		}
+
+		return Core::App().settings().translateTo().twoLetterCode();
+	};
 	auto useGTApi = GetEnhancedBool("use_gt_api");
 	auto languageCodes = Core::App().gTranslate()->languageCodes;
-		auto targetLangIndex = GetEnhancedInt("gt_target_lang");
-		auto targetLang = targetLangIndex == 0
-			? Core::App().settings().translateTo().twoLetterCode()
-			: languageCodes->at(targetLangIndex - 1);
+	auto targetLangIndex = GetEnhancedInt(usedForInput ? "gt_target_input_lang" : "gt_target_lang");
+	auto targetLang = targetLangIndex == 0
+		? getChatTranslateFrom()
+		: languageCodes->at(targetLangIndex - 1);
 
 	auto toTC = GetEnhancedBool("translate_to_tc"); // Override translate setting :)
 	if (toTC && targetLang == "zh") {

@@ -201,6 +201,74 @@ void GTranslateTargetLanguageBox::save() {
 	closeBox();
 }
 
+GTranslateInputTargetLanguageBox::GTranslateInputTargetLanguageBox(QWidget *parent) {
+}
+
+void GTranslateInputTargetLanguageBox::prepare() {
+	setTitle(tr::lng_gt_target_input_language());
+
+	addButton(tr::lng_settings_save(), [=] { save(); });
+	addButton(tr::lng_cancel(), [=] { closeBox(); });
+
+	auto y = st::boxOptionListPadding.top();
+	_description.create(
+			this,
+			tr::lng_gt_target_input_language_desc(tr::now),
+			st::boxLabel);
+	_description->moveToLeft(st::boxPadding.left(), y);
+
+	y += _description->height() + st::boxMediumSkip;
+
+	auto targetLang = GetEnhancedInt("gt_target_input_lang");
+	_optionGroup = std::make_shared<Ui::RadiobuttonGroup>(targetLang);
+
+	auto wrap = object_ptr<Ui::VerticalLayout>(this);
+	const auto content = wrap.data();
+	setInnerWidget(std::move(wrap), y);
+
+	content->add(object_ptr<Ui::Radiobutton>(
+			content,
+			_optionGroup,
+			0,
+			tr::lng_gt_target_language_default(tr::now),
+			st::autolockButton), st::defaultCheckbox.margin);
+
+	auto languageCodes = Core::App().gTranslate()->languageCodes;
+	for (int i = 0; i < languageCodes->size(); i++) {
+		auto languageCode = languageCodes->at(i);
+
+		if (languageCode == "jw") {
+			languageCode = "jv";
+		}
+
+		QLocale locale(languageCode);
+		auto languageString = locale.languageToString(locale.language());
+		bool isLangWasC = false;
+		if (languageString == "C") {
+			isLangWasC = true;
+			languageString = languageCode;
+		}
+
+		const auto button = content->add(object_ptr<Ui::Radiobutton>(
+				content,
+				_optionGroup,
+				i + 1,
+				isLangWasC ? languageString : (locale.nativeLanguageName() + "\n" + languageString),
+				st::autolockButton), st::defaultCheckbox.margin);
+		button->setAllowTextLines(2);
+	}
+
+	setDimensionsToContent(st::boxWidth, content);
+	setDimensions(st::boxWideWidth, st::boxMaxListHeight);
+	scrollToWidget(content->widgetAt(targetLang));
+}
+
+void GTranslateInputTargetLanguageBox::save() {
+	SetEnhancedValue("gt_target_input_lang", _optionGroup->current());
+	EnhancedSettings::Write();
+	closeBox();
+}
+
 RadioController::RadioController(QWidget *parent)
 		: _url(this, st::defaultInputField, tr::lng_formatting_link_url()) {
 }

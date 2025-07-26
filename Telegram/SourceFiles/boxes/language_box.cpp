@@ -1197,15 +1197,17 @@ void LanguageBox::setupTop(not_null<Ui::VerticalLayout*> container) {
 
 	using namespace rpl::mappers;
 	auto premium = Data::AmPremiumValue(&_controller->session());
+	auto useGTApi = GetEnhancedBool("use_gt_api");
 	const auto translateChat = container->add(object_ptr<Ui::SettingsButton>(
 		container,
 		tr::lng_translate_settings_chat(),
-		st::settingsButtonNoIconLocked
+		useGTApi ? st::settingsButtonNoIcon : st::settingsButtonNoIconLocked
 	))->toggleOn(rpl::merge(
 		rpl::combine(
 			Core::App().settings().translateChatEnabledValue(),
 			rpl::duplicate(premium),
-			_1 && _2),
+			rpl::single(useGTApi),
+			_1 && (_2 || _3)),
 		_translateChatTurnOff.events()));
 	std::move(premium) | rpl::start_with_next([=](bool value) {
 		translateChat->setToggleLocked(!value);
@@ -1214,13 +1216,14 @@ void LanguageBox::setupTop(not_null<Ui::VerticalLayout*> container) {
 	translateChat->toggledValue(
 	) | rpl::filter([=](bool checked) {
 		const auto premium = _controller->session().premium();
-		if (checked && !premium) {
+		const auto useGTApi = GetEnhancedBool("use_gt_api");
+		if (checked && !(premium || useGTApi)) {
 			ShowPremiumPreviewToBuy(
 				_controller,
 				PremiumFeature::RealTimeTranslation);
 			_translateChatTurnOff.fire(false);
 		}
-		return premium
+		return (premium || useGTApi)
 			&& (checked != Core::App().settings().translateChatEnabled());
 	}) | rpl::start_with_next([=](bool checked) {
 		Core::App().settings().setTranslateChatEnabled(checked);

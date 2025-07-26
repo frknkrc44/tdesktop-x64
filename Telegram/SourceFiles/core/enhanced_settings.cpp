@@ -289,6 +289,7 @@ namespace EnhancedSettings {
 
 		auto settings = QJsonObject();
 		settings.insert(qsl("gt_target_lang"), 0);
+		settings.insert(qsl("gt_target_input_lang"), 0);
 		settings.insert(qsl("net_speed_boost"), 0);
 		settings.insert(qsl("show_messages_id"), false);
 		settings.insert(qsl("show_repeater_option"), false);
@@ -346,6 +347,7 @@ namespace EnhancedSettings {
 
 		auto settings = QJsonObject();
 		settings.insert(qsl("gt_target_lang"), GetEnhancedInt("gt_target_lang"));
+		settings.insert(qsl("gt_target_input_lang"), GetEnhancedInt("gt_target_input_lang"));
 		settings.insert(qsl("net_speed_boost"), GetEnhancedInt("net_speed_boost"));
 		settings.insert(qsl("show_messages_id"), GetEnhancedBool("show_messages_id"));
 		settings.insert(qsl("show_repeater_option"), GetEnhancedBool("show_repeater_option"));

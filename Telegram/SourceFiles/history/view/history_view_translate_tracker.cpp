@@ -60,13 +60,15 @@ void TranslateTracker::setup() {
 		) | rpl::map([=](Data::Flags<ChannelDataFlags>::Change data) {
 		return (data.value & ChannelDataFlag::AutoTranslation);
 	}) | rpl::distinct_until_changed();
+	auto useGTApi = GetEnhancedBool("use_gt_api");
 
 	using namespace rpl::mappers;
 	_trackingLanguage = rpl::combine(
 		Core::App().settings().translateChatEnabledValue(),
 		Data::AmPremiumValue(&_history->session()),
 		std::move(autoTranslationValue),
-		_1 && (_2 || _3));
+		rpl::single(useGTApi),
+		_1 && (_2 || _3 || _4));
 	_trackingLanguage.value() | rpl::start_with_next([=](bool tracking) {
 		_trackingLifetime.destroy();
 		if (tracking) {

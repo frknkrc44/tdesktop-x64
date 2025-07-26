@@ -6965,8 +6965,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_context_forward_msg_old_selected" = "Forward Selected (Classic)";
 
 "lng_gt_target_language" = "Google/Telegram Translate target language";
-"lng_gt_target_language_desc" = "NOTE: This setting is valid for both input field and chat screen.";
+"lng_gt_target_language_desc" = "NOTE: This setting is only valid for chat screen.";
 "lng_gt_target_language_default" = "User language";
+
+"lng_gt_target_input_language" = "Google/Telegram Translate input target language";
+"lng_gt_target_input_language_desc" = "NOTE: This setting is only valid for input field.";
 
 "lng_message_id" = "Message ID: ";
 

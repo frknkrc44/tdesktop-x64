@@ -344,6 +344,20 @@ namespace Settings {
 			Ui::show(Box<GTranslateTargetLanguageBox>());
 		});
 
+		auto targetInputLangBtn = AddButtonWithIcon(
+				inner,
+				tr::lng_gt_target_input_language(),
+				st::settingsButtonNoIcon
+		);
+		targetInputLangBtn->events(
+		) | rpl::start_with_next([=](not_null<QEvent*> e) {
+			// const auto event = e->type();
+			// if (event == QEvent::UpdateLater) _AlwaysDeleteChanged.fire({});
+		}, container->lifetime());
+		targetInputLangBtn->addClickHandler([=] {
+			Ui::show(Box<GTranslateInputTargetLanguageBox>());
+		});
+
 		QString langPackBaseId = Lang::GetInstance().baseId();
 		if (langPackBaseId == "zh-hant-raw" || langPackBaseId == "zh-hans-raw") {
 			AddButtonWithIcon(

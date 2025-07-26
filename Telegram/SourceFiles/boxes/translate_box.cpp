@@ -232,7 +232,7 @@ void TranslateBox(
 			showText(TextWithEntities{ .text = result });
 		};
 
-		Integration::Instance().getTranslateResult(text.text, result);
+		Integration::Instance().getTranslateResult(text.text, false, result);
 	};
 	state->to.value() | rpl::start_with_next(send, box->lifetime());
 
