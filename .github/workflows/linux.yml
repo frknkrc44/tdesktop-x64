@@ -31,7 +31,7 @@ jobs:
       UPLOAD_ARTIFACT: "true"
       ONLY_CACHE: "false"
       IMAGE_TAG: tdesktop:centos_env
-      BUILD_TYPE: "Release"  # Cambiado de Debug a Release
+      BUILD_TYPE: "Release"
 
     steps:
       - name: Clone repository
@@ -88,13 +88,18 @@ jobs:
           $IMAGE_TAG \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -D CMAKE_C_FLAGS_RELEASE="-O3" \
-          -D CMAKE_CXX_FLAGS_RELEASE="-O3" \
+          -D CMAKE_C_FLAGS_RELEASE="-O3 -s" \
+          -D CMAKE_CXX_FLAGS_RELEASE="-O3 -s" \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           -D TDESKTOP_API_TEST=OFF \
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF
+
+      - name: Strip binaries
+        if: env.ONLY_CACHE == 'false'
+        run: |
+          find out/${{ env.BUILD_TYPE }} -type f -executable -exec strip --strip-all {} \;
 
       - name: Verify build
         if: env.ONLY_CACHE == 'false'
