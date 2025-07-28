@@ -1,4 +1,4 @@
-name: Linux.
+name: Linux
 
 on:
   push:
@@ -41,7 +41,6 @@ on:
       - 'Telegram/Telegram.plist'
 
 jobs:
-
   linux:
     name: Rocky Linux 8
     runs-on: ubuntu-latest
@@ -120,8 +119,8 @@ jobs:
           $IMAGE_TAG \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_CONFIGURATION_TYPES=Release \
-          -D CMAKE_C_FLAGS_RELEASE="-O3" \
-          -D CMAKE_CXX_FLAGS_RELEASE="-O3" \
+          -D CMAKE_C_FLAGS_RELEASE="-O3 -s" \
+          -D CMAKE_CXX_FLAGS_RELEASE="-O3 -s" \
           -D CMAKE_COMPILE_WARNING_AS_ERROR=OFF \
           -D TDESKTOP_API_TEST=OFF \
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
@@ -130,13 +129,17 @@ jobs:
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           $DEFINE
 
+      - name: Strip binaries
+        if: env.ONLY_CACHE == 'false'
+        run: |
+          find out/Release -type f -executable -exec strip --strip-all {} \;
+
       - name: Check.
         if: env.ONLY_CACHE == 'false'
         run: |
           filePath="out/Release/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
-
             size=$(stat -c %s "$filePath")
             echo "File size of ${filePath}: ${size} Bytes."
           else
@@ -150,6 +153,7 @@ jobs:
           cd out/Release
           mkdir artifact
           mv {Telegram,Updater} artifact/
+
       - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
