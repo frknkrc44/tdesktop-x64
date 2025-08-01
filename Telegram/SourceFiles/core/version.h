@@ -26,4 +26,4 @@ constexpr auto AppVersion = 1001067;
 constexpr auto AppVersionStr = "1.1.67";
 constexpr auto AppBetaVersion = false;
 constexpr auto AppAlphaVersion = TDESKTOP_ALPHA_VERSION;
-constexpr auto UpstreamVersion = "5.16.6";
+constexpr auto UpstreamVersion = "6.0.1";
