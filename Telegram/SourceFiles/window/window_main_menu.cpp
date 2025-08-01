@@ -707,17 +707,19 @@ void MainMenu::setupMenu() {
 						IconDescriptor{ &st::menuIconStoriesSavedSection })));
 			const auto selfId = controller->session().userPeerId();
 			const auto stories = &controller->session().data().stories();
-			if (stories->archiveCount(selfId) > 0) {
+			constexpr auto kArchive = Data::kStoriesAlbumIdArchive;
+			if (stories->albumIdsCount(selfId, kArchive) > 0) {
 				wrap->toggle(true, anim::type::instant);
 			} else {
 				wrap->toggle(false, anim::type::instant);
-				if (!stories->archiveCountKnown(selfId)) {
-					stories->archiveLoadMore(selfId);
-					wrap->toggleOn(stories->archiveChanged(
+				if (!stories->albumIdsCountKnown(selfId, kArchive)) {
+					stories->albumIdsLoadMore(selfId, kArchive);
+					const auto key = Data::StoryAlbumIdsKey{ selfId, kArchive };
+					wrap->toggleOn(stories->albumIdsChanged(
 				) | rpl::filter(
-					rpl::mappers::_1 == selfId
+					rpl::mappers::_1 == key
 					) | rpl::map([=] {
-						return stories->archiveCount(selfId) > 0;
+						return stories->albumIdsCount(selfId, kArchive) > 0;
 					}) | rpl::filter(rpl::mappers::_1) | rpl::take(1));
 				}
 			}

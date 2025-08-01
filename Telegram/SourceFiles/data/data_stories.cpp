@@ -1751,11 +1751,11 @@ void Stories::albumIdsLoadMore(PeerId peerId, int albumId) {
 }
 
 void Stories::albumIdsLoadMore(PeerId peerId, int albumId, bool reload) {
-	Expects(!reload || albumId > 0);
-
 	if (GetEnhancedBool("hide_stories")) {
 		return;
 	}
+
+	Expects(!reload || albumId > 0);
 
 	const auto peer = _owner->peer(peerId);
 	const auto set = albumIdsSet(peerId, albumId);
