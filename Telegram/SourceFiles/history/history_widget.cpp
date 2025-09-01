@@ -115,6 +115,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_pinned_section.h"
 #include "history/view/history_view_pinned_bar.h"
 #include "history/view/history_view_group_call_bar.h"
+#include "history/view/history_view_group_members_widget.h"
 #include "history/view/history_view_item_preview.h"
 #include "history/view/history_view_reply.h"
 #include "history/view/history_view_requests_bar.h"
@@ -122,7 +123,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_subsection_tabs.h"
 #include "history/view/history_view_translate_bar.h"
 #include "history/view/media/history_view_media.h"
-#include "profile/profile_block_group_members.h"
 #include "core/click_handler_types.h"
 #include "chat_helpers/field_autocomplete.h"
 #include "chat_helpers/tabbed_panel.h"
@@ -825,7 +825,7 @@ HistoryWidget::HistoryWidget(
 		| PeerUpdateFlag::Slowmode
 		| PeerUpdateFlag::BotStartToken
 		| PeerUpdateFlag::MessagesTTL
-		| PeerUpdateFlag::ChatThemeEmoji
+		| PeerUpdateFlag::ChatThemeToken
 		| PeerUpdateFlag::FullInfo
 		| PeerUpdateFlag::StarsPerMessage
 		| PeerUpdateFlag::GiftSettings
@@ -899,10 +899,10 @@ HistoryWidget::HistoryWidget(
 		if (flags & PeerUpdateFlag::MessagesTTL) {
 			checkMessagesTTL();
 		}
-		if ((flags & PeerUpdateFlag::ChatThemeEmoji) && _list) {
-			const auto emoji = _peer->themeEmoji();
+		if ((flags & PeerUpdateFlag::ChatThemeToken) && _list) {
+			const auto emoji = _peer->themeToken();
 			if (Data::CloudThemes::TestingColors() && !emoji.isEmpty()) {
-				_peer->owner().cloudThemes().themeForEmojiValue(
+				_peer->owner().cloudThemes().themeForTokenValue(
 					emoji
 				) | rpl::filter_optional(
 				) | rpl::take(
@@ -2128,6 +2128,18 @@ void HistoryWidget::setupShortcuts() {
 					std::make_shared<Scheduled>(_history));
 				return true;
 			});
+		if (showRecordButton()) {
+			const auto isVoice = request->check(Command::RecordVoice, 1);
+			const auto isRound = !isVoice
+				&& request->check(Command::RecordRound, 1);
+			(isVoice || isRound) && request->handle([=] {
+				if (_voiceRecordBar) {
+					_voiceRecordBar->startRecordingAndLock(isRound);
+					return true;
+				}
+				return false;
+			});
+		}
 		if (session().supportMode()) {
 			request->check(
 				Command::SupportToggleMuted
@@ -5258,7 +5270,7 @@ void HistoryWidget::updateOverStates(QPoint pos) {
 }
 
 void HistoryWidget::leaveToChildEvent(QEvent *e, QWidget *child) {
-// e -- from enterEvent() of child TWidget
+// e -- from enterEvent() of child RpWidget
 	if (hasMouseTracking()) {
 		updateOverStates(mapFromGlobal(QCursor::pos()));
 	}
@@ -5438,7 +5450,7 @@ bool HistoryWidget::eventFilter(QObject *obj, QEvent *e) {
 			}
 		}
 	}
-	return TWidget::eventFilter(obj, e);
+	return RpWidget::eventFilter(obj, e);
 }
 
 bool HistoryWidget::floatPlayerHandleWheelEvent(QEvent *e) {
@@ -5877,11 +5889,7 @@ void HistoryWidget::showMembersDropdown() {
 	if (!_membersDropdown) {
 		_membersDropdown.create(this, st::membersInnerDropdown);
 		_membersDropdown->setOwnedWidget(
-			object_ptr<Profile::GroupMembersWidget>(
-				this,
-				controller(),
-				_peer,
-				st::membersInnerItem));
+			object_ptr<HistoryView::GroupMembersWidget>(this, controller(), _peer));
 		_membersDropdown->resizeToWidth(st::membersInnerWidth);
 
 		_membersDropdown->setMaxHeight(countMembersDropdownHeightMax());
@@ -8841,7 +8849,7 @@ void HistoryWidget::editMessage(
 		controller()->showToast(tr::lng_edit_caption_voice(tr::now));
 		return;
 	} else if (const auto media = item->media()) {
-		if (const auto todolist = media->todolist()) {
+		if (media->todolist()) {
 			Window::PeerMenuEditTodoList(controller(), item);
 			return;
 		}
