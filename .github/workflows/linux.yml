@@ -34,8 +34,8 @@ jobs:
       BUILD_TYPE: "Release"
 
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v4
+      - name: Clone
+        uses: actions/checkout@v5
         with:
           repository: nubesurrealista/tdesktop-x64
           submodules: recursive

@@ -1246,9 +1246,32 @@ const QString &PeerData::topBarNameText() const {
 	if (const auto to = migrateTo()) {
 		return to->topBarNameText();
 	} else if (const auto user = asUser()) {
-		if (!user->nameOrPhone.isEmpty()) {
+		if (!user->nameOrPhone.isEmpty() && !GetEnhancedBool("screenshot_mode")) {
 			return user->nameOrPhone;
 		}
+	}
+	if (isLoaded()
+		&& !isServiceUser()
+		&& !isVerified()
+		&& GetEnhancedBool("screenshot_mode")) {
+		if (const auto user = asUser()) {
+			if (user->isInaccessible()) {
+				return _name;
+			}
+		}
+		if (!_fakeName.isEmpty()) {
+			return _fakeName;
+		}
+		return _fakeName.append(isUser()
+			? (asUser()->isBot() ? "Bot " : "User ")
+			: isBroadcast()
+			? "Channel "
+			: isForum()
+			? "Forum "
+			: isMegagroup()
+			? "Group "
+			: "Chat ")
+			.append(QString::number(_randomNumber));
 	}
 	return _name;
 }
@@ -1773,24 +1796,23 @@ PeerId PeerData::groupCallDefaultJoinAs() const {
 	return 0;
 }
 
-void PeerData::setThemeEmoji(const QString &emoticon) {
-	if (_themeEmoticon == emoticon) {
+void PeerData::setThemeToken(const QString &token) {
+	if (_themeToken == token) {
+		return;
+	} else if (!token.startsWith(u"gift:"_q)
+		&& Ui::Emoji::Find(_themeToken) == Ui::Emoji::Find(token)) {
+		_themeToken = token;
 		return;
 	}
-	if (Ui::Emoji::Find(_themeEmoticon) == Ui::Emoji::Find(emoticon)) {
-		_themeEmoticon = emoticon;
-		return;
+	_themeToken = token;
+	if (!token.isEmpty() && !owner().cloudThemes().themeForToken(token)) {
+		owner().cloudThemes().refreshChatThemesFor(token);
 	}
-	_themeEmoticon = emoticon;
-	if (!emoticon.isEmpty()
-		&& !owner().cloudThemes().themeForEmoji(emoticon)) {
-		owner().cloudThemes().refreshChatThemes();
-	}
-	session().changes().peerUpdated(this, UpdateFlag::ChatThemeEmoji);
+	session().changes().peerUpdated(this, UpdateFlag::ChatThemeToken);
 }
 
-const QString &PeerData::themeEmoji() const {
-	return _themeEmoticon;
+const QString &PeerData::themeToken() const {
+	return _themeToken;
 }
 
 void PeerData::setWallPaper(
