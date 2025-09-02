@@ -1,4 +1,4 @@
-name: Linux Build
+name: Linux
 
 on:
   push:
@@ -20,27 +20,49 @@ on:
       - 'Telegram/Telegram/**'
       - 'Telegram/configure.bat'
       - 'Telegram/Telegram.plist'
-  workflow_dispatch:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'changelog.txt'
+      - 'LEGAL'
+      - 'LICENSE'
+      - '.github/**'
+      - '!.github/workflows/linux.yml'
+      - 'snap/**'
+      - 'Telegram/build/**'
+      - '!Telegram/build/docker/centos_env/**'
+      - 'Telegram/Resources/uwp/**'
+      - 'Telegram/Resources/winrc/**'
+      - 'Telegram/SourceFiles/platform/win/**'
+      - 'Telegram/SourceFiles/platform/mac/**'
+      - 'Telegram/Telegram/**'
+      - 'Telegram/configure.bat'
+      - 'Telegram/Telegram.plist'
 
 jobs:
   linux:
     name: Rocky Linux 8
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        defines:
+          - ""
+          - "DESKTOP_APP_DISABLE_X11_INTEGRATION"
+
     env:
       UPLOAD_ARTIFACT: "true"
       ONLY_CACHE: "false"
       IMAGE_TAG: tdesktop:centos_env
-      BUILD_TYPE: "Release"
 
     steps:
-      - name: Clone
+      - name: Clone.
         uses: actions/checkout@v5
         with:
-          repository: nubesurrealista/tdesktop-x64
           submodules: recursive
 
-      - name: First set up
+      - name: First set up.
         run: |
           sudo apt update
           curl -sSL https://install.python-poetry.org | python3 -
@@ -49,22 +71,22 @@ jobs:
           DOCKERFILE=$(DEBUG= LTO= poetry run gen_dockerfile)
           echo "$DOCKERFILE" > Dockerfile
 
-      - name: Free up disk space
+      - name: Free up some disk space.
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
           tool-cache: true
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx.
         uses: docker/setup-buildx-action@v3
 
-      - name: Libraries cache
+      - name: Libraries cache.
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/.buildx-cache
           key: ${{ runner.OS }}-libs-${{ hashFiles('Telegram/build/docker/centos_env/**') }}
           restore-keys: ${{ runner.OS }}-libs-
 
-      - name: Build Docker image
+      - name: Libraries.
         uses: docker/build-push-action@v6
         with:
           context: Telegram/build/docker/centos_env
@@ -73,38 +95,49 @@ jobs:
           cache-from: type=local,src=${{ runner.temp }}/.buildx-cache
           cache-to: type=local,dest=${{ runner.temp }}/.buildx-cache-new,mode=max
 
-      - name: Move cache
+      - name: Move cache.
         run: |
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache{-new,}
 
-      - name: Build Telegram Desktop
+      - name: Telegram Desktop build.
         if: env.ONLY_CACHE == 'false'
         run: |
+          DEFINE=""
+          if [ -n "${{ matrix.defines }}" ]; then
+            DEFINE="-D ${{ matrix.defines }}=ON"
+            echo Define from matrix: $DEFINE
+            echo "ARTIFACT_NAME=Telegram_${{ matrix.defines }}" >> $GITHUB_ENV
+          else
+            echo "ARTIFACT_NAME=Telegram" >> $GITHUB_ENV
+          fi
+
           docker run --rm \
           -u $(id -u) \
           -v $PWD:/usr/src/tdesktop \
-          -e CONFIG=${{ env.BUILD_TYPE }} \
+          -e CONFIG=Release \
           $IMAGE_TAG \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
-          -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -D CMAKE_CONFIGURATION_TYPES=Release \
           -D CMAKE_C_FLAGS_RELEASE="-O3 -s" \
           -D CMAKE_CXX_FLAGS_RELEASE="-O3 -s" \
-          -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
-          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
+          -D CMAKE_COMPILE_WARNING_AS_ERROR=OFF \
           -D TDESKTOP_API_TEST=OFF \
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
-          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF
+          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
+          -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
+          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
+          $DEFINE
 
       - name: Strip binaries
         if: env.ONLY_CACHE == 'false'
         run: |
-          find out/${{ env.BUILD_TYPE }} -type f -executable -exec strip --strip-all {} \;
+          find out/Release -type f -executable -exec strip --strip-all {} \;
 
-      - name: Verify build
+      - name: Check.
         if: env.ONLY_CACHE == 'false'
         run: |
-          filePath="out/${{ env.BUILD_TYPE }}/Telegram"
+          filePath="out/Release/Telegram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
             size=$(stat -c %s "$filePath")
@@ -114,16 +147,16 @@ jobs:
             exit 1
           fi
 
-      - name: Package artifact
+      - name: Move artifact.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd out/${{ env.BUILD_TYPE }}
-          mkdir -p artifact
+          cd out/Release
+          mkdir artifact
           mv {Telegram,Updater} artifact/
 
-      - name: Upload artifact
+      - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
-        uses: actions/upload-artifact@v4
+        name: Upload artifact.
         with:
-          name: Telegram-Desktop
-          path: out/${{ env.BUILD_TYPE }}/artifact/
+          name: ${{ env.ARTIFACT_NAME }}
+          path: out/Release/artifact/
