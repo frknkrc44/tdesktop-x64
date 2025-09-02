@@ -683,6 +683,9 @@ QSize WebPage::countCurrentSize(int newWidth) {
 	}
 
 	const auto padding = inBubblePadding() + innerMargin();
+	if (GetEnhancedBool("wide_messages")) {
+		accumulate_min(newWidth, maxWidth());
+	}
 	const auto innerWidth = newWidth - rect::m::sum::h(padding);
 	auto newHeight = 0;
 
