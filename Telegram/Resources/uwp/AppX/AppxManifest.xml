@@ -9,7 +9,7 @@
    IgnorableNamespaces="uap uap2 uap3 desktop rescap">
   <Identity Name="TelegramMessengerLLP.TelegramDesktop"
     ProcessorArchitecture="ARCHITECTURE"
-    Version="1.1.71.0" />
+    Version="1.1.72.0" />
   <Properties>
     <DisplayName>Telegram Desktop</DisplayName>
     <PublisherDisplayName>Telegram Messenger LLP</PublisherDisplayName>
