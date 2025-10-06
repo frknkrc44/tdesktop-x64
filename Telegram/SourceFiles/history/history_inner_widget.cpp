@@ -2788,6 +2788,14 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 		}
 		const auto itemId = item->fullId();
 		_menu->addAction(
+			tr::lng_context_edit_msg(tr::now),
+			crl::guard(this, [=] {
+				if (const auto item = session->data().message(itemId)) {
+					Window::PeerMenuEditTodoList(_controller, item);
+				}
+			}),
+			&st::menuIconEdit);
+		_menu->addAction(
 			tr::lng_todo_add_title(tr::now),
 			crl::guard(this, [=] {
 				if (const auto item = session->data().message(itemId)) {

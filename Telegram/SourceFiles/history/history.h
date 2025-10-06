@@ -453,6 +453,8 @@ public:
 
 	[[nodiscard]] HistoryTranslation *translation() const;
 
+	void refreshHiddenLinksItems();
+
 	const not_null<PeerData*> peer;
 
 	// Still public data.
