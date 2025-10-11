@@ -77,17 +77,17 @@ jobs:
 
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: ThirdParty cache.
+      - name: Restore ThirdParty cache.
         id: cache-third-party
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ThirdParty
           key: ${{ runner.OS }}-third-party-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
           restore-keys: ${{ runner.OS }}-third-party-
 
-      - name: Libraries cache.
+      - name: Restore Libraries cache.
         id: cache-libs
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: Libraries
           key: ${{ runner.OS }}-libs-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
@@ -128,6 +128,24 @@ jobs:
           $DEFINE
 
           cmake --build ../out --config Release --parallel
+
+      - name: Save ThirdParty cache.
+        id: cache-third-party-save
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ThirdParty
+          key: ${{ runner.OS }}-third-party-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
+          restore-keys: ${{ runner.OS }}-third-party-
+
+      - name: Save Libraries cache.
+        id: cache-libs-save
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: Libraries
+          key: ${{ runner.OS }}-libs-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
+          restore-keys: ${{ runner.OS }}-libs-
 
       - name: Move artifact.
         if: env.UPLOAD_ARTIFACT == 'true'
