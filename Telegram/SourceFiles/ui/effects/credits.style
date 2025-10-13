@@ -92,7 +92,7 @@ starIconEmojiLarge: IconEmoji {
 
 tonIconEmoji: IconEmoji {
 	icon: icon{{ "chat/mini_ton_bold", currencyFg }};
-	padding: margins(1px, 3px, 1px, 0px);
+	padding: margins(1px, 2px, 1px, 0px);
 }
 tonIconEmojiLarge: IconEmoji {
 	icon: icon{{ "payments/ton_emoji-18x18", currencyFg }};
@@ -200,7 +200,7 @@ giftBoxButtonBottomByStars: 18px;
 giftBoxButtonPadding: margins(8px, 4px, 8px, 4px);
 giftBoxPreviewStickerPadding: margins(10px, 12px, 10px, 16px);
 giftBoxPreviewTitlePadding: margins(12px, 4px, 12px, 4px);
-giftBoxReleasedByMargin: margins(12px, 2px, 12px, 2px);
+giftBoxReleasedByMargin: margins(6px, 1px, 6px, 2px);
 giftBoxPreviewTextPadding: margins(12px, 4px, 12px, 4px);
 giftBoxButtonMargin: margins(12px, 8px, 12px, 12px);
 giftBoxStickerTop: 0px;
@@ -276,6 +276,11 @@ uniqueGiftSubtitle: FlatLabel(defaultFlatLabel) {
 	minWidth: 256px;
 	align: align(top);
 }
+uniqueGiftReleasedBy: FlatLabel(uniqueGiftSubtitle) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(10px);
+	}
+}
 uniqueGiftSubtitleTop: 170px;
 uniqueGiftUserpicTop: 48px;
 uniqueGiftUserpicSize: 80px;
@@ -299,6 +304,9 @@ uniqueMenuButton: IconButton(uniqueCloseButton) {
 }
 upgradeGiftBox: Box(giftBox) {
 	buttonPadding: margins(22px, 3px, 22px, 22px);
+}
+upgradeGiftWithPricesBox: Box(giftBox) {
+	buttonPadding: margins(22px, 3px, 22px, 46px);
 }
 upgradeGiftSubtext: FlatLabel(boxDividerLabel) {
 	minWidth: 200px;
@@ -355,6 +363,14 @@ resaleButtonSubtitle: FlatLabel(defaultFlatLabel) {
 	}
 	textFg: activeButtonFg;
 	maxHeight: 20px;
+}
+resalePriceTableLink: FlatLabel(defaultFlatLabel) {
+	minWidth: 200px;
+	align: align(top);
+}
+resalePriceAbout: FlatLabel(boxLabel) {
+	textFg: windowSubTextFg;
+	align: align(top);
 }
 
 resaleConfirmTonOnly: FlatLabel(boxLabel) {

@@ -148,6 +148,8 @@ PRIVATE
     info/profile/info_profile_icon.h
     info/profile/info_profile_music_button.cpp
     info/profile/info_profile_music_button.h
+    info/profile/info_profile_text.cpp
+    info/profile/info_profile_text.h
     info/userpic/info_userpic_bubble_wrap.cpp
     info/userpic/info_userpic_bubble_wrap.h
     info/userpic/info_userpic_color_circle_button.cpp
@@ -402,6 +404,8 @@ PRIVATE
     ui/controls/stars_rating.h
     ui/controls/subsection_tabs_slider.cpp
     ui/controls/subsection_tabs_slider.h
+    ui/controls/subsection_tabs_slider_reorder.cpp
+    ui/controls/subsection_tabs_slider_reorder.h
     ui/controls/sub_tabs.cpp
     ui/controls/sub_tabs.h
     ui/controls/swipe_handler.cpp
@@ -502,6 +506,8 @@ PRIVATE
     ui/vertical_list.h
     ui/unread_badge_paint.cpp
     ui/unread_badge_paint.h
+    ui/unread_counter_format.cpp
+    ui/unread_counter_format.h
     ui/userpic_view.cpp
     ui/userpic_view.h
     ui/webview_helpers.cpp

@@ -90,10 +90,11 @@ jobs:
           -D CMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
           -D CMAKE_C_FLAGS_RELEASE="-O3 -s" \
           -D CMAKE_CXX_FLAGS_RELEASE="-O3 -s" \
+          -D CMAKE_COMPILE_WARNING_AS_ERROR=OFF \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
           -D TDESKTOP_API_TEST=OFF \
-          -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
+          -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF
 
       - name: Strip binaries
@@ -117,9 +118,9 @@ jobs:
       - name: Package artifact
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd out/${{ env.BUILD_TYPE }}
-          mkdir -p artifact
-          mv {Telegram,Updater} artifact/
+          cd out/Release
+          mkdir artifact
+          mv Telegram artifact/
 
       - name: Upload artifact
         if: env.UPLOAD_ARTIFACT == 'true'

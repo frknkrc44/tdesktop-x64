@@ -43,7 +43,7 @@ jobs:
 
   macos:
     name: MacOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     strategy:
       matrix:
@@ -77,17 +77,17 @@ jobs:
 
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: ThirdParty cache.
+      - name: Restore ThirdParty cache.
         id: cache-third-party
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ThirdParty
           key: ${{ runner.OS }}-third-party-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
           restore-keys: ${{ runner.OS }}-third-party-
 
-      - name: Libraries cache.
+      - name: Restore Libraries cache.
         id: cache-libs
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: Libraries
           key: ${{ runner.OS }}-libs-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
@@ -121,7 +121,7 @@ jobs:
           -D CMAKE_COMPILE_WARNING_AS_ERROR=OFF \
           -D CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
           -D TDESKTOP_API_TEST=OFF \
-          -D DESKTOP_APP_DISABLE_AUTOUPDATE=OFF \
+          -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
           -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
@@ -129,13 +129,30 @@ jobs:
 
           cmake --build ../out --config Release --parallel
 
+      - name: Save ThirdParty cache.
+        id: cache-third-party-save
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ThirdParty
+          key: ${{ runner.OS }}-third-party-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
+          restore-keys: ${{ runner.OS }}-third-party-
+
+      - name: Save Libraries cache.
+        id: cache-libs-save
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: Libraries
+          key: ${{ runner.OS }}-libs-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
+          restore-keys: ${{ runner.OS }}-libs-
+
       - name: Move artifact.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
           cd $REPO_NAME/out/Release
           mkdir artifact
           mv Telegram.app artifact/
-          mv Updater artifact/
       - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.

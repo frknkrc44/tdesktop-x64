@@ -420,6 +420,7 @@ emojiPanHover: windowBgOver;
 emojiPanSlideDuration: 200;
 emojiPanArea: size(34px, 32px);
 emojiPanRadius: 8px;
+emojiPanReactionsPreviewPadding: margins(10px, 20px, 10px, 20px);
 
 defaultTabbedSearchCancel: CrossButton {
 	width: 33px;
@@ -813,6 +814,15 @@ reactPanelScrollRounded: ScrollArea(emojiScroll) {
 	deltax: 3px;
 	deltat: 14px;
 	deltab: 14px;
+}
+selfForwardsTaggerStripSkip: 26px;
+selfForwardsTaggerIcon: size(32px, 32px);
+selfForwardsTaggerToast: Toast(defaultToast) {
+	minWidth: 160px;
+	maxWidth: 380px;
+	radius: 9px;
+	padding: margins(54px, 12px, 19px, 12px);
+	iconPosition: point(15px, 6px);
 }
 
 choosePeerGroupIcon: icon {{ "info/edit/create_group", lightButtonFg }};

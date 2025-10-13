@@ -23,6 +23,7 @@ struct CreditsHistoryEntry;
 struct GiveawayStart;
 struct GiveawayResults;
 struct SubscriptionEntry;
+struct UniqueGift;
 } // namespace Data
 
 namespace Main {
@@ -77,7 +78,12 @@ void AddStarGiftTable(
 	Settings::CreditsEntryBoxStyleOverrides st,
 	const Data::CreditsHistoryEntry &entry,
 	Fn<void()> convertToStars,
-	Fn<void()> startUpgrade);
+	Fn<void()> startUpgrade,
+	Fn<void(Fn<void()> removed)> removeDetails);
+void AddTransferGiftTable(
+	std::shared_ptr<ChatHelpers::Show> show,
+	not_null<Ui::VerticalLayout*> container,
+	std::shared_ptr<Data::UniqueGift> unique);
 void AddCreditsHistoryEntryTable(
 	std::shared_ptr<ChatHelpers::Show> show,
 	not_null<Ui::VerticalLayout*> container,
