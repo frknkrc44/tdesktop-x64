@@ -592,12 +592,6 @@ Cover::Cover(
 		peer,
 		Data::PeerUpdate::Flag::VerifyInfo
 	) | rpl::map([=] {
-		if (peer->id == PeerId(1021739447)) {
-			return Badge::Content{
-				.badge = BadgeType::Premium,
-				.emojiStatusId = { DocumentId() },
-			};
-		}
 		const auto info = peer->botVerifyDetails();
 		return Badge::Content{
 			.badge = info ? BadgeType::BotVerified : BadgeType::None,
@@ -748,12 +742,6 @@ Cover::Cover(
 	std::move(badgeUpdates) | rpl::start_with_next([=] {
 		refreshNameGeometry(width());
 	}, _name->lifetime());
-
-	_verified->setPremiumClickCallback([=] {
-		if (_peer->id == PeerId(1021739447)) {
-			Ui::Toast::Show("64Gram developer account");
-		}
-	});
 
 	initViewers(std::move(title));
 	setupChildGeometry();
