@@ -54,7 +54,6 @@ jobs:
       ONLY_CACHE: "false"
       MANUAL_CACHING: "1"
       AUTO_CACHING: "1"
-      MACOSX_DEPLOYMENT_TARGET: "14.0"
 
     steps:
       - name: Get repository name.
@@ -70,7 +69,7 @@ jobs:
         run: |
           brew update
           brew upgrade || true
-          brew install ada-url autoconf automake boost ffmpeg@6 jpeg-xl libavif libheif libtool openal-soft openh264 openssl opus ninja pkg-config python qt yasm xz
+          brew install ada-url autoconf automake boost cmake ffmpeg@6 jpeg-xl libavif libheif libtool openal-soft openh264 openssl opus ninja pkg-config python qtbase qtimageformats qtsvg xz
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
           xcodebuild -version > CACHE_KEY.txt
@@ -83,7 +82,7 @@ jobs:
           fi
           echo "CACHE_KEY=`md5 -q CACHE_KEY.txt`" >> $GITHUB_ENV
 
-          echo "MACOSX_DEPLOYMENT_TARGET=$(grep 'set(QT_SUPPORTED_MIN_MACOS_VERSION' /opt/homebrew/Cellar/qt/6.9.2/lib/cmake/Qt6/Qt6ConfigExtras.cmake | sed -E 's/^.*"(.*)"\)$/\1/')" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=$(grep 'set(QT_SUPPORTED_MIN_MACOS_VERSION' /opt/homebrew/Cellar/qtbase/*/lib/cmake/Qt6/Qt6ConfigExtras.cmake | sed -E 's/^.*"(.*)"\)$/\1/')" >> $GITHUB_ENV
           echo "LibrariesPath=`pwd`" >> $GITHUB_ENV
 
           curl -o tg_owt-version.json https://api.github.com/repos/desktop-app/tg_owt/git/refs/heads/master
@@ -92,7 +91,7 @@ jobs:
         run: |
           cd $LibrariesPath
 
-          git clone --depth=1 https://github.com/xiph/rnnoise.git
+          git clone --depth=1 https://gitlab.xiph.org/xiph/rnnoise.git
           cd rnnoise
           ./autogen.sh
           ./configure --disable-examples --disable-doc
@@ -114,9 +113,10 @@ jobs:
           cd tg_owt
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS_RELEASE="-O3" \
-          -DCMAKE_CXX_FLAGS_RELEASE="-O3"
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_FLAGS_DEBUG="" \
+          -DCMAKE_CXX_FLAGS_DEBUG="" \
+          -DCMAKE_DISABLE_FIND_PACKAGE_absl=ON
 
           cmake --build build --parallel
 
@@ -138,10 +138,10 @@ jobs:
           git reset --hard FETCH_HEAD
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_INSTALL_PREFIX=$PWD/build/prefix \
-          -DCMAKE_C_FLAGS_RELEASE="-O3" \
-          -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
+          -DCMAKE_C_FLAGS_DEBUG="" \
+          -DCMAKE_CXX_FLAGS_DEBUG="" \
           -DTD_E2E_ONLY=ON
 
           cmake --build build --parallel
@@ -165,12 +165,10 @@ jobs:
           fi
 
           cmake -Bbuild -GNinja . \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_FLAGS_RELEASE="-O3" \
-          -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
-          -DTDESKTOP_API_TEST=OFF \
-          -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
-          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_FLAGS_DEBUG="" \
+          -DCMAKE_CXX_FLAGS_DEBUG="" \
+          -DTDESKTOP_API_TEST=ON \
           $DEFINE
 
           cmake --build build --parallel
@@ -195,3 +193,4 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.REPO_NAME }}/build/artifact/
+
