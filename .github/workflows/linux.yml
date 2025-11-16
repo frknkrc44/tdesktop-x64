@@ -3,42 +3,42 @@ name: Linux
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/linux.yml'
-      - 'snap/**'
-      - 'Telegram/build/**'
-      - '!Telegram/build/docker/centos_env/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/Resources/winrc/**'
-      - 'Telegram/SourceFiles/platform/win/**'
-      - 'Telegram/SourceFiles/platform/mac/**'
-      - 'Telegram/Telegram/**'
-      - 'Telegram/configure.bat'
-      - 'Telegram/Telegram.plist'
+      - "docs/**"
+      - "**.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/linux.yml"
+      - "snap/**"
+      - "Telegram/build/**"
+      - "!Telegram/build/docker/centos_env/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/Resources/winrc/**"
+      - "Telegram/SourceFiles/platform/win/**"
+      - "Telegram/SourceFiles/platform/mac/**"
+      - "Telegram/Telegram/**"
+      - "Telegram/configure.bat"
+      - "Telegram/Telegram.plist"
   pull_request:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/linux.yml'
-      - 'snap/**'
-      - 'Telegram/build/**'
-      - '!Telegram/build/docker/centos_env/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/Resources/winrc/**'
-      - 'Telegram/SourceFiles/platform/win/**'
-      - 'Telegram/SourceFiles/platform/mac/**'
-      - 'Telegram/Telegram/**'
-      - 'Telegram/configure.bat'
-      - 'Telegram/Telegram.plist'
+      - "docs/**"
+      - "**.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/linux.yml"
+      - "snap/**"
+      - "Telegram/build/**"
+      - "!Telegram/build/docker/centos_env/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/Resources/winrc/**"
+      - "Telegram/SourceFiles/platform/win/**"
+      - "Telegram/SourceFiles/platform/mac/**"
+      - "Telegram/Telegram/**"
+      - "Telegram/configure.bat"
+      - "Telegram/Telegram.plist"
 
 jobs:
   linux:
@@ -154,7 +154,7 @@ jobs:
           mkdir artifact
           mv Telegram artifact/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
         with:

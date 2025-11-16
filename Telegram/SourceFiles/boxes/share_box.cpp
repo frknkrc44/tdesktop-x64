@@ -1704,24 +1704,26 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 		}
 
 		using Flag = MTPmessages_ForwardMessages::Flag;
-		auto commonSendFlags = MTPmessages_ForwardMessages::Flags(0);
+
 		if (no_quote) {
-			commonSendFlags = (options.scheduled ? Flag::f_schedule_date : Flag(0)) | Flag::f_drop_author | Flag::f_drop_media_captions;
-		} else {
-			commonSendFlags = Flag(0)
-				| Flag::f_with_my_score
-				| (options.scheduled ? Flag::f_schedule_date : Flag(0))
-				| ((forwardOptions != Data::ForwardOptions::PreserveInfo)
-					? Flag::f_drop_author
-					: Flag(0))
-				| ((forwardOptions == Data::ForwardOptions::NoNamesAndCaptions)
-					? Flag::f_drop_media_captions
-					: Flag(0))
-				| (videoTimestamp.has_value()
-					? Flag::f_video_timestamp
-					: Flag(0));
+		    forwardOptions = Data::ForwardOptions::NoNamesAndCaptions;
 		}
 
+		const auto commonSendFlags = Flag(0)
+			| Flag::f_with_my_score
+			| (options.scheduled ? Flag::f_schedule_date : Flag(0))
+			| ((options.scheduled && options.scheduleRepeatPeriod)
+				? Flag::f_schedule_repeat_period
+				: Flag(0))
+			| ((forwardOptions != Data::ForwardOptions::PreserveInfo)
+				? Flag::f_drop_author
+				: Flag(0))
+			| ((forwardOptions == Data::ForwardOptions::NoNamesAndCaptions)
+				? Flag::f_drop_media_captions
+				: Flag(0))
+			| (videoTimestamp.has_value()
+				? Flag::f_video_timestamp
+				: Flag(0));
 		auto mtpMsgIds = QVector<MTPint>();
 		mtpMsgIds.reserve(existingIds.size());
 		for (const auto &fullId : existingIds) {
@@ -1740,7 +1742,8 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 			result,
 			msgIds);
 		const auto showRecentForwardsToSelf = result.size() == 1
-			&& result.front()->peer()->isSelf();
+			&& result.front()->peer()->isSelf()
+			&& history->owner().session().premium();
 		const auto requestType = Data::Histories::RequestType::Send;
 		for (const auto thread : result) {
 			if (!comment.text.isEmpty()) {
@@ -1791,6 +1794,7 @@ ShareBox::SubmitCallback ShareBox::DefaultForwardCallback(
 							? MTP_inputReplyToMonoForum(sublistPeer->input)
 							: MTPInputReplyTo()),
 						MTP_int(options.scheduled),
+						MTP_int(options.scheduleRepeatPeriod),
 						MTP_inputPeerEmpty(), // send_as
 						Data::ShortcutIdToMTP(session, options.shortcutId),
 						MTP_int(videoTimestamp.value_or(0)),

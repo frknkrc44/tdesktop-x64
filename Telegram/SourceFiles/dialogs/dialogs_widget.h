@@ -287,6 +287,7 @@ private:
 	void updateLockUnlockPosition();
 	void updateSuggestions(anim::type animated);
 	void processSearchFocusChange();
+	void closeSuggestions();
 
 	void setupShortcuts(not_null<Window::SessionController *> controller);
 	[[nodiscard]] bool redirectToSearchPossible() const;

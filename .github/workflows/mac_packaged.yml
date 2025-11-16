@@ -3,41 +3,40 @@ name: MacOS Packaged.
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/mac_packaged.yml'
-      - 'lib/xdg/**'
-      - 'snap/**'
-      - 'Telegram/build/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/Resources/winrc/**'
-      - 'Telegram/SourceFiles/platform/win/**'
-      - 'Telegram/SourceFiles/platform/linux/**'
-      - 'Telegram/configure.bat'
+      - "docs/**"
+      - "**.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/mac_packaged.yml"
+      - "lib/xdg/**"
+      - "snap/**"
+      - "Telegram/build/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/Resources/winrc/**"
+      - "Telegram/SourceFiles/platform/win/**"
+      - "Telegram/SourceFiles/platform/linux/**"
+      - "Telegram/configure.bat"
   pull_request:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/mac_packaged.yml'
-      - 'lib/xdg/**'
-      - 'snap/**'
-      - 'Telegram/build/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/Resources/winrc/**'
-      - 'Telegram/SourceFiles/platform/win/**'
-      - 'Telegram/SourceFiles/platform/linux/**'
-      - 'Telegram/configure.bat'
+      - "docs/**"
+      - "**.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/mac_packaged.yml"
+      - "lib/xdg/**"
+      - "snap/**"
+      - "Telegram/build/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/Resources/winrc/**"
+      - "Telegram/SourceFiles/platform/win/**"
+      - "Telegram/SourceFiles/platform/linux/**"
+      - "Telegram/configure.bat"
 
 jobs:
-
   macos:
     name: MacOS
     runs-on: macos-latest
@@ -70,7 +69,7 @@ jobs:
         run: |
           brew update
           brew upgrade || true
-          brew install ada-url autoconf automake boost ffmpeg@6 jpeg-xl libavif libheif libtool openal-soft openh264 openssl opus ninja pkg-config python qt yasm xz
+          brew install ada-url autoconf automake boost cmake ffmpeg@6 jpeg-xl libavif libheif libtool openal-soft openh264 openssl opus ninja pkg-config python qtbase qtimageformats qtsvg xz
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
           xcodebuild -version > CACHE_KEY.txt
@@ -83,7 +82,7 @@ jobs:
           fi
           echo "CACHE_KEY=`md5 -q CACHE_KEY.txt`" >> $GITHUB_ENV
 
-          echo "MACOSX_DEPLOYMENT_TARGET=$(grep 'set(QT_SUPPORTED_MIN_MACOS_VERSION' /opt/homebrew/Cellar/qt/6.9.2/lib/cmake/Qt6/Qt6ConfigExtras.cmake | sed -E 's/^.*"(.*)"\)$/\1/')" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=$(grep 'set(QT_SUPPORTED_MIN_MACOS_VERSION' /opt/homebrew/Cellar/qtbase/*/lib/cmake/Qt6/Qt6ConfigExtras.cmake | sed -E 's/^.*"(.*)"\)$/\1/')" >> $GITHUB_ENV
           echo "LibrariesPath=`pwd`" >> $GITHUB_ENV
 
           curl -o tg_owt-version.json https://api.github.com/repos/desktop-app/tg_owt/git/refs/heads/master
@@ -116,7 +115,8 @@ jobs:
           cmake -Bbuild -GNinja . \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_FLAGS_RELEASE="-O3" \
-          -DCMAKE_CXX_FLAGS_RELEASE="-O3"
+          -DCMAKE_CXX_FLAGS_RELEASE="-O3" \
+          -DCMAKE_DISABLE_FIND_PACKAGE_absl=ON
 
           cmake --build build --parallel
 
@@ -189,7 +189,7 @@ jobs:
           cd $REPO_NAME/build
           mkdir artifact
           mv Telegram.dmg artifact/
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
         with:

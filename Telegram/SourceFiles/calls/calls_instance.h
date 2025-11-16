@@ -149,6 +149,8 @@ public:
 
 	[[nodiscard]] FnMut<void()> addAsyncWaiter();
 
+	void registerVideoStream(not_null<GroupCall*> call);
+
 	[[nodiscard]] bool isSharingScreen() const;
 	[[nodiscard]] bool isQuitPrevent();
 
@@ -218,6 +220,10 @@ private:
 	base::flat_map<CallId, ConferenceInvites> _conferenceInvites;
 
 	base::flat_set<std::unique_ptr<crl::semaphore>> _asyncWaiters;
+
+	base::flat_map<
+		not_null<Main::Session*>,
+		std::vector<base::weak_ptr<GroupCall>>> _streams;
 
 };
 

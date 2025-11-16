@@ -3,48 +3,47 @@ name: Windows.
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '!docs/building-win*.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/win.yml'
-      - 'lib/xdg/**'
-      - 'snap/**'
-      - 'Telegram/build/docker/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/SourceFiles/platform/linux/**'
-      - 'Telegram/SourceFiles/platform/mac/**'
-      - 'Telegram/Telegram/**'
-      - 'Telegram/configure.sh'
-      - 'Telegram/Telegram.plist'
+      - "docs/**"
+      - "**.md"
+      - "!docs/building-win*.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/win.yml"
+      - "lib/xdg/**"
+      - "snap/**"
+      - "Telegram/build/docker/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/SourceFiles/platform/linux/**"
+      - "Telegram/SourceFiles/platform/mac/**"
+      - "Telegram/Telegram/**"
+      - "Telegram/configure.sh"
+      - "Telegram/Telegram.plist"
   pull_request:
     paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '!docs/building-win*.md'
-      - 'changelog.txt'
-      - 'LEGAL'
-      - 'LICENSE'
-      - '.github/**'
-      - '!.github/workflows/win.yml'
-      - 'lib/xdg/**'
-      - 'snap/**'
-      - 'Telegram/build/docker/**'
-      - 'Telegram/Resources/uwp/**'
-      - 'Telegram/SourceFiles/platform/linux/**'
-      - 'Telegram/SourceFiles/platform/mac/**'
-      - 'Telegram/Telegram/**'
-      - 'Telegram/configure.sh'
-      - 'Telegram/Telegram.plist'
-  
+      - "docs/**"
+      - "**.md"
+      - "!docs/building-win*.md"
+      - "changelog.txt"
+      - "LEGAL"
+      - "LICENSE"
+      - ".github/**"
+      - "!.github/workflows/win.yml"
+      - "lib/xdg/**"
+      - "snap/**"
+      - "Telegram/build/docker/**"
+      - "Telegram/Resources/uwp/**"
+      - "Telegram/SourceFiles/platform/linux/**"
+      - "Telegram/SourceFiles/platform/mac/**"
+      - "Telegram/Telegram/**"
+      - "Telegram/configure.sh"
+      - "Telegram/Telegram.plist"
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-
   windows:
     name: Windows
     runs-on: windows-latest
@@ -206,7 +205,7 @@ jobs:
         run: |
           mkdir artifact
           move %TBUILD%\%REPO_NAME%\out\Release\*.exe artifact\
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload artifact.
         if: (env.UPLOAD_ARTIFACT == 'true') || (github.ref == 'refs/heads/nightly')
         with:

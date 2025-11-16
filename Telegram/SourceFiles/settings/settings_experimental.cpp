@@ -35,6 +35,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/notifications_manager.h"
 #include "storage/localimageloader.h"
 #include "data/data_document_resolver.h"
+#include "info/info_flexible_scroll.h"
 #include "styles/style_settings.h"
 #include "styles/style_layers.h"
 #include "ui/chat/chat_style.h"
@@ -170,6 +171,7 @@ void SetupExperimental(
 		addToggle(kOptionFastButtonsMode);
 	}
 	addToggle(Window::kOptionDisableTouchbar);
+	addToggle(Info::kAlternativeScrollProcessing);
 }
 
 } // namespace
