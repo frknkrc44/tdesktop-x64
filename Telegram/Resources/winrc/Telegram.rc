@@ -63,8 +63,10 @@ BEGIN
             VALUE "CompanyName", "64Gram"
             VALUE "FileDescription", "64Gram Desktop"
             VALUE "FileVersion", "1.1.74.0"
+            VALUE "FileVersion", "1.1.74.0"
             VALUE "LegalCopyright", "Copyright (C) 2014-2025"
             VALUE "ProductName", "64Gram Desktop"
+            VALUE "ProductVersion", "1.1.74.0"
             VALUE "ProductVersion", "1.1.74.0"
         END
     END
@@ -76,3 +78,4 @@ END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
+
