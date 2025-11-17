@@ -1,8 +1,7 @@
-AppVersion         1001074
-AppVersion         1001074
-AppVersionStrMajor 1.1
-AppVersionStrSmall 1.1.74
-AppVersionStr      1.1.74
+AppVersion         6003000
+AppVersionStrMajor 6.3
+AppVersionStrSmall 6.3
+AppVersionStr      6.3.0
 BetaChannel        0
 AlphaVersion       0
-AppVersionOriginal 1.1.74
+AppVersionOriginal 6.3
