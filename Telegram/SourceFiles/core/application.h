@@ -309,6 +309,9 @@ public:
 	rpl::producer<bool> passcodeLockChanges() const;
 	rpl::producer<bool> passcodeLockValue() const;
 
+	void lockBySetupEmail();
+	void unlockSetupEmail();
+
 	void checkAutoLock(crl::time lastNonIdleTime = 0);
 	void checkAutoLockIn(crl::time time);
 	void localPasscodeChanged();
@@ -449,6 +452,7 @@ private:
 	bool _floatPlayerGifsPaused = false;
 
 	rpl::variable<bool> _passcodeLock;
+	rpl::variable<bool> _setupEmailLock;
 	bool _screenIsLocked = false;
 
 	crl::time _shouldLockAt = 0;

@@ -2,7 +2,7 @@
 Name=64Gram Desktop
 Comment=Unofficial desktop version of Telegram messaging app
 TryExec=Telegram
-Exec=Telegram -- %u
+Exec=Telegram -- %U
 Icon=org.telegram.desktop
 Terminal=false
 StartupWMClass=64Gram

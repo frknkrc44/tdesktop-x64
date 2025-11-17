@@ -241,7 +241,11 @@ Panel::Panel(not_null<GroupCall*> call, ConferencePanelMigration info)
 , _messages(std::make_unique<MessagesUi>(
 	widget(),
 	uiShow(),
+	MessagesMode::GroupCall,
 	_call->messages()->listValue(),
+	nullptr,
+	_call->messages()->idUpdates(),
+	_call->canManageValue(),
 	_call->messagesEnabledValue()))
 , _toasts(std::make_unique<Toasts>(this))
 , _controlsBackgroundColor([] {
@@ -1081,7 +1085,7 @@ Fn<void()> Panel::shareConferenceLinkCallback() {
 	return [=] {
 		Expects(_call->conference());
 
-		ShowConferenceCallLinkBox(uiShow(), _call->conferenceCall(), {
+		ShowConferenceCallLinkBox(uiShow(), _call->sharedCall(), {
 			.st = DarkConferenceCallLinkStyle(),
 		});
 	};
@@ -1090,7 +1094,7 @@ Fn<void()> Panel::shareConferenceLinkCallback() {
 void Panel::migrationShowShareLink() {
 	ShowConferenceCallLinkBox(
 		uiShow(),
-		_call->conferenceCall(),
+		_call->sharedCall(),
 		{ .st = DarkConferenceCallLinkStyle() });
 }
 
@@ -1666,7 +1670,7 @@ void Panel::addMembers() {
 	const auto &appConfig = _call->peer()->session().appConfig();
 	const auto conferenceLimit = appConfig.confcallSizeLimit();
 	if (_call->conference()
-		&& _call->conferenceCall()->fullCount() >= conferenceLimit) {
+		&& _call->sharedCall()->fullCount() >= conferenceLimit) {
 		uiShow()->showToast({ tr::lng_group_call_invite_limit(tr::now) });
 	}
 	const auto showToastCallback = [=](TextWithEntities &&text) {

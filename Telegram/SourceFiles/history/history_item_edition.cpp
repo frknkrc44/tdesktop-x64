@@ -18,6 +18,7 @@ HistoryMessageEdition::HistoryMessageEdition(
 : suggest(HistoryMessageSuggestInfo(message.vsuggested_post())) {
 	isEditHide = message.is_edit_hide();
 	isMediaUnread = message.is_media_unread();
+	repeatPeriod = message.vschedule_repeat_period().value_or_empty();
 	editDate = message.vedit_date().value_or(-1);
 
 	auto peerId = message.vfrom_id() ? peerFromMTP(*message.vfrom_id()) : PeerId(0);
