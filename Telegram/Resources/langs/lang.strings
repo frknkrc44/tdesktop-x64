@@ -4055,6 +4055,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_auction_bid_increased_title" = "Your bid has been increased";
 "lng_auction_bid_done_text#one" = "If you fall below the **top {count}**, your bid will roll over to the next round.";
 "lng_auction_bid_done_text#other" = "If you fall below the **top {count}**, your bid will roll over to the next round.";
+"lng_auction_bid_custom_title" = "Custom Amount";
 "lng_auction_preview_left#one" = "{count} left";
 "lng_auction_preview_left#other" = "{count} left";
 "lng_auction_preview_join" = "Join";

@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "ui/effects/numbers_animation.h"
 #include "ui/effects/ministar_particles.h"
+#include "ui/abstract_button.h"
 #include "ui/rp_widget.h"
 
 enum lngtag_count : int;
@@ -106,7 +107,7 @@ enum class BubbleType : uchar {
 	Credits,
 };
 
-class BubbleWidget final : public Ui::RpWidget {
+class BubbleWidget final : public Ui::AbstractButton {
 public:
 	BubbleWidget(
 		not_null<Ui::RpWidget*> parent,
