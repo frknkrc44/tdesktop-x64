@@ -121,6 +121,7 @@ void AddProxyFromClipboard(
 		Success,
 		Failed,
 		Unsupported,
+		IncorrectSecret,
 		Invalid,
 	};
 
@@ -160,8 +161,11 @@ void AddProxyFromClipboard(
 					qthelp::UrlParamNameTransform::ToLower);
 				const auto proxy = ProxyDataFromFields(type, fields);
 				if (!proxy) {
-					return (proxy.status() == ProxyData::Status::Unsupported)
+					const auto status = proxy.status();
+					return (status == ProxyData::Status::Unsupported)
 						? Result::Unsupported
+						: (status == ProxyData::Status::IncorrectSecret)
+						? Result::IncorrectSecret
 						: Result::Invalid;
 				}
 				const auto contains = controller->contains(proxy);
@@ -195,9 +199,11 @@ void AddProxyFromClipboard(
 				tr::lng_proxy_add_from_clipboard_failed_toast(tr::now));
 		} else {
 			show->showBox(Ui::MakeInformBox(
-				(success == Result::Unsupported
-					? tr::lng_proxy_unsupported(tr::now)
-					: tr::lng_proxy_invalid(tr::now))));
+				((success == Result::IncorrectSecret)
+					? tr::lng_proxy_incorrect_secret(tr::now, tr::rich)
+					: (success == Result::Unsupported)
+					? tr::lng_proxy_unsupported(tr::now, tr::rich)
+					: tr::lng_proxy_invalid(tr::now, tr::rich))));
 		}
 	}
 }
@@ -1212,7 +1218,7 @@ void ProxyBox::setupSocketAddress(const ProxyData &data) {
 }
 
 void ProxyBox::setupCredentials(const ProxyData &data) {
-		_credentials = _content->add(
+	_credentials = _content->add(
 		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
 			_content,
 			object_ptr<Ui::VerticalLayout>(_content)));
@@ -1345,10 +1351,13 @@ void ProxiesBoxController::ShowApplyConfirmation(
 		const QMap<QString, QString> &fields) {
 	const auto proxy = ProxyDataFromFields(type, fields);
 	if (!proxy) {
+		const auto status = proxy.status();
 		auto box = Ui::MakeInformBox(
-			(proxy.status() == ProxyData::Status::Unsupported
-				? tr::lng_proxy_unsupported(tr::now)
-				: tr::lng_proxy_invalid(tr::now)));
+			((status == ProxyData::Status::Unsupported)
+				? tr::lng_proxy_unsupported(tr::now, tr::rich)
+				: (status == ProxyData::Status::IncorrectSecret)
+				? tr::lng_proxy_incorrect_secret(tr::now, tr::rich)
+				: tr::lng_proxy_invalid(tr::now, tr::rich)));
 		if (controller) {
 			controller->uiShow()->showBox(std::move(box));
 		} else {

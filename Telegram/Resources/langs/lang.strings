@@ -328,7 +328,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_proxy_box_password" = "Password";
 "lng_proxy_invalid" = "The proxy link is invalid.";
 "lng_proxy_unsupported" = "Your 64Gram Desktop version doesn't support this proxy type or the proxy link is invalid. Please update 64Gram Desktop to the latest version.";
-
+"lng_proxy_incorrect_secret" = "This proxy link uses invalid **secret** parameter. Please contact the proxy provider and ask him to update MTProxy source code and configure it with a correct **secret** value. Then let him provide a new link.";
 "lng_edit_deleted" = "This message was deleted";
 "lng_edit_limit_reached#one" = "You've reached the message text limit. Please make the text shorter by {count} character.";
 "lng_edit_limit_reached#other" = "You've reached the message text limit. Please make the text shorter by {count} characters.";
@@ -1682,6 +1682,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_profile_suggest_photo" = "Suggest Profile Photo";
 "lng_profile_suggest_photo_from_clipboard" = "Suggest From Clipboard";
 "lng_profile_set_photo_for" = "Set Profile Photo";
+"lng_profile_set_photo_for_group" = "Set Group Photo";
+"lng_profile_set_photo_for_channel" = "Set Channel Photo";
 "lng_profile_set_photo_for_from_clipboard" = "Set From Clipboard";
 "lng_profile_set_photo_for_about" = "You can replace {user}'s photo with another photo that only you will see.";
 "lng_profile_photo_reset" = "Reset to Original";
@@ -4053,6 +4055,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_auction_bid_increased_title" = "Your bid has been increased";
 "lng_auction_bid_done_text#one" = "If you fall below the **top {count}**, your bid will roll over to the next round.";
 "lng_auction_bid_done_text#other" = "If you fall below the **top {count}**, your bid will roll over to the next round.";
+"lng_auction_bid_custom_title" = "Custom Amount";
 "lng_auction_preview_left#one" = "{count} left";
 "lng_auction_preview_left#other" = "{count} left";
 "lng_auction_preview_join" = "Join";

@@ -9,7 +9,8 @@
    IgnorableNamespaces="uap uap2 uap3 desktop rescap">
   <Identity Name="TelegramMessengerLLP.TelegramDesktop"
     ProcessorArchitecture="ARCHITECTURE"
-    Version="6.3.0.0" />
+    Publisher="CN=536BC709-8EE1-4478-AF22-F0F0F26FF64A"
+    Version="6.3.1.0" />
   <Properties>
     <DisplayName>Telegram Desktop</DisplayName>
     <PublisherDisplayName>Telegram Messenger LLP</PublisherDisplayName>
