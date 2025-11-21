@@ -75,6 +75,3 @@ BEGIN
 END
 
 #endif    // English (United States) resources
-/////////////////////////////////////////////////////////////////////////////
-            VALUE "ProductName", "64Gram Desktop"
-            VALUE "ProductVersion", "6.3.1.0"
