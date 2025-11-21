@@ -265,7 +265,7 @@ BubbleWidget::BubbleWidget(
 	rpl::producer<> showFinishes,
 	const style::icon *icon,
 	const style::margins &outerPadding)
-: RpWidget(parent)
+: AbstractButton(parent)
 , _st(st)
 , _state(std::move(state))
 , _bubble(
@@ -615,6 +615,7 @@ not_null<BubbleWidget*> AddBubbleRow(
 		std::move(showFinishes),
 		icon,
 		outerPadding);
+	bubble->setAttribute(Qt::WA_TransparentForMouseEvents);
 	rpl::combine(
 		container->sizeValue(),
 		bubble->sizeValue()

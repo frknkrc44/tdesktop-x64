@@ -161,10 +161,6 @@ QString currentVersionText() {
 	} else if (Platform::IsWindowsARM64()) {
 		result += " arm64";
 	}
-	result += QString("｜v%1").arg(UpstreamVersion);
-#ifdef _DEBUG
-	result += " DEBUG";
-#endif
 	return result;
 }
 
@@ -314,4 +310,3 @@ void ArchiveHintBox(
 		box->addButton(std::move(button));
 	}
 }
-

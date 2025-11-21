@@ -21,6 +21,7 @@ class Session;
 
 namespace Ui {
 
+class AbstractButton;
 class BoxContent;
 class GenericBox;
 class DynamicImage;
@@ -82,7 +83,7 @@ void PaidReactionSlider(
 	const style::MediaSlider &st,
 	int min,
 	int explicitlyAllowed,
-	int current,
+	rpl::producer<int> current,
 	int max,
 	Fn<void(int)> changed,
 	Fn<QColor(int)> activeFgOverride = nullptr);
@@ -93,7 +94,7 @@ void AddStarSelectBalance(
 	rpl::producer<CreditsAmount> balanceValue,
 	bool dark = false);
 
-void AddStarSelectBubble(
+not_null<AbstractButton*> AddStarSelectBubble(
 	not_null<GenericBox*> box,
 	rpl::producer<int> value,
 	int max,
@@ -102,6 +103,7 @@ void AddStarSelectBubble(
 struct StarSelectInfoBlock {
 	rpl::producer<TextWithEntities> title;
 	rpl::producer<QString> subtext;
+	Fn<void()> click;
 };
 [[nodiscard]] object_ptr<RpWidget> MakeStarSelectInfoBlocks(
 	not_null<RpWidget*> parent,

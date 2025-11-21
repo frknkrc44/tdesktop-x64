@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/components/gift_auctions.h"
 #include "data/data_message_reactions.h"
 #include "data/data_user.h"
+#include "history/view/controls/history_view_suggest_options.h"
 #include "info/channel_statistics/earn/earn_icons.h"
 #include "info/peer_gifts/info_peer_gifts_common.h"
 #include "lang/lang_keys.h"
@@ -40,6 +41,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/text/text_utilities.h"
 #include "ui/toast/toast.h"
 #include "ui/widgets/buttons.h"
+#include "ui/widgets/fields/number_input.h"
 #include "ui/wrap/table_layout.h"
 #include "ui/color_int_conversion.h"
 #include "ui/dynamic_thumbnails.h"
@@ -47,12 +49,14 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h"
 #include "styles/style_calls.h"
 #include "styles/style_chat.h"
+#include "styles/style_chat_helpers.h"
 #include "styles/style_credits.h"
 #include "styles/style_giveaway.h"
 #include "styles/style_info.h"
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 #include "styles/style_premium.h"
+#include "styles/style_settings.h"
 
 namespace Ui {
 namespace {
@@ -291,7 +295,8 @@ void PlaceAuctionBid(
 object_ptr<RpWidget> MakeAuctionInfoBlocks(
 		not_null<RpWidget*> box,
 		not_null<Main::Session*> session,
-		rpl::producer<Data::GiftAuctionState> stateValue) {
+		rpl::producer<Data::GiftAuctionState> stateValue,
+		Fn<void()> setMinimal) {
 	auto helper = Text::CustomEmojiHelper(Core::TextContext({
 		.session = session,
 	}));
@@ -300,14 +305,22 @@ object_ptr<RpWidget> MakeAuctionInfoBlocks(
 	auto bidTitle = rpl::duplicate(
 		stateValue
 	) | rpl::map([=](const Data::GiftAuctionState &state) {
-		return TextWithEntities{
-			star
-		}.append(' ').append(Lang::FormatCountDecimal(state.minBidAmount));
+		const auto count = int(state.my.minBidAmount
+			? state.my.minBidAmount
+			: state.minBidAmount);
+		const auto text = (count >= 10'000'000)
+			? Lang::FormatCountToShort(count).string
+			: (count >= 1000'000)
+			? Lang::FormatCountToShort(count, true).string
+			: Lang::FormatCountDecimal(count);
+		return tr::marked(star).append(' ').append(text);
 	});
 	auto minimal = rpl::duplicate(
 		stateValue
 	) | rpl::map([=](const Data::GiftAuctionState &state) {
-		return state.minBidAmount;
+		return state.my.minBidAmount
+			? state.my.minBidAmount
+			: state.minBidAmount;
 	}) | tr::to_count();
 	auto untilTitle = rpl::duplicate(
 		stateValue
@@ -341,6 +354,7 @@ object_ptr<RpWidget> MakeAuctionInfoBlocks(
 			.subtext = tr::lng_auction_bid_minimal(
 				lt_count,
 				std::move(minimal)),
+			.click = setMinimal,
 		},
 		{
 			.title = std::move(untilTitle),
@@ -426,6 +440,7 @@ void AddBidPlaces(
 			}
 			pushTop(i);
 		}
+		top.push_back({ show->session().user(), chosen });
 		return finishWith((levels.empty() ? 0 : levels.back().position) + 1);
 	});
 	auto myLabelText = state->my.value() | rpl::map([](My my) {
@@ -470,6 +485,43 @@ void AddBidPlaces(
 	}
 }
 
+void EditCustomBid(
+		not_null<GenericBox*> box,
+		std::shared_ptr<ChatHelpers::Show> show,
+		Fn<void(int)> save,
+		rpl::producer<int> minBid,
+		int current) {
+	box->setTitle(tr::lng_auction_bid_custom_title());
+
+	const auto container = box->verticalLayout();
+
+	box->addTopButton(st::boxTitleClose, [=] { box->closeBox(); });
+
+	const auto starsField = HistoryView::AddStarsInputField(container, {
+		.value = current,
+	});
+
+	const auto min = box->lifetime().make_state<rpl::variable<int>>(
+		std::move(minBid));
+
+	box->setFocusCallback([=] {
+		starsField->setFocusFast();
+	});
+
+	box->addButton(tr::lng_settings_save(), [=] {
+		const auto value = starsField->getLastText().toLongLong();
+		if (value <= min->current() || value > 1'000'000'000) {
+			starsField->showError();
+			return;
+		}
+		save(value);
+		box->closeBox();
+	});
+	box->addButton(tr::lng_cancel(), [=] {
+		box->closeBox();
+	});
+}
+
 void AuctionBidBox(not_null<GenericBox*> box, AuctionBidBoxArgs &&args) {
 	const auto weak = base::make_weak(box);
 
@@ -487,7 +539,7 @@ void AuctionBidBox(not_null<GenericBox*> box, AuctionBidBoxArgs &&args) {
 	const auto &now = state->value.current();
 	const auto mine = int(now.my.bid);
 	const auto min = std::max(
-		int(mine ? now.my.minBidAmount : now.minBidAmount),
+		int(now.my.minBidAmount ? now.my.minBidAmount : now.minBidAmount),
 		1);
 	const auto last = now.bidLevels.empty()
 		? 0
@@ -550,14 +602,30 @@ void AuctionBidBox(not_null<GenericBox*> box, AuctionBidBoxArgs &&args) {
 			count);
 		return ColorFromSerialized(coloring.bgLight);
 	};
-	AddStarSelectBubble(box, state->chosen.value(), max, activeFgOverride);
+	const auto bubble = AddStarSelectBubble(
+		box,
+		state->chosen.value(),
+		max,
+		activeFgOverride);
+	bubble->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+	bubble->setClickedCallback([=, show = args.show] {
+		auto min = state->value.value(
+		) | rpl::map([=](const Data::GiftAuctionState &state) {
+			return std::max(1, int(state.my.minBidAmount
+				? state.my.minBidAmount
+				: state.minBidAmount));
+		});
+		show->show(Box(EditCustomBid, show, crl::guard(box, [=](int value) {
+			state->chosen = value;
+		}), std::move(min), state->chosen.current()));
+	});
 
 	PaidReactionSlider(
 		content,
 		st::paidReactSlider,
 		min,
 		mine,
-		chosen,
+		state->chosen.value(),
 		max,
 		[=](int count) { state->chosen = count; },
 		activeFgOverride);
@@ -575,8 +643,18 @@ void AuctionBidBox(not_null<GenericBox*> box, AuctionBidBoxArgs &&args) {
 		st::boxRowPadding + QMargins(0, skip, 0, 0),
 		style::al_top);
 
+	const auto setMinimal = [=] {
+		const auto &now = state->value.current();
+		state->chosen = int(now.my.minBidAmount
+			? now.my.minBidAmount
+			: now.minBidAmount);
+	};
 	box->addRow(
-		MakeAuctionInfoBlocks(box, &show->session(), state->value.value()),
+		MakeAuctionInfoBlocks(
+			box,
+			&show->session(),
+			state->value.value(),
+			setMinimal),
 		st::boxRowPadding + QMargins(0, skip / 2, 0, skip));
 
 	AddBidPlaces(box, show, state->value.value(), state->chosen.value());
@@ -607,6 +685,7 @@ void AuctionBidBox(not_null<GenericBox*> box, AuctionBidBoxArgs &&args) {
 				tr::marked);
 	}) | rpl::flatten_latest());
 
+	show->session().credits().load(true);
 	AddStarSelectBalance(
 		box,
 		&show->session(),
@@ -841,6 +920,8 @@ void AuctionGotGiftsBox(
 		tr::lng_auction_bought_title(lt_count, rpl::single(count * 1.)));
 	box->setWidth(st::boxWideWidth);
 	box->setMaxHeight(st::boxWideWidth * 2);
+	box->addButton(tr::lng_box_ok(), [=] { box->closeBox(); });
+	box->addTopButton(st::boxTitleClose, [=] { box->closeBox(); });
 
 	auto helper = Text::CustomEmojiHelper(Core::TextContext({
 		.session = &show->session(),

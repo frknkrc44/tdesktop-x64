@@ -133,7 +133,6 @@ replaceInFile(scriptPath + '/../SourceFiles/core/version.h', [
   [ r'(AppVersion\s+=\s+)\d+', r'\g<1>' + versionFull ],
   [ r'(AppVersionStr\s+=\s+)[^;]+', r'\g<1>"' + versionStrSmall + '"' ],
   [ r'(AppBetaVersion\s+=\s+)[a-z]+', r'\g<1>' + ('true' if versionBeta else 'false') ],
-  [ r'(UpstreamVersion\s+=\s+)[^;]+', r'\g<1>"' + versionUpstream + '"' ],
 ])
 
 parts = [versionMajor, versionMinor, versionPatch, versionAlpha]
