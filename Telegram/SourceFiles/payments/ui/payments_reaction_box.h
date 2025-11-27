@@ -19,6 +19,10 @@ namespace Main {
 class Session;
 } // namespace Main
 
+namespace Ui::Premium {
+class BubbleWidget;
+} // namespace Ui::Premium
+
 namespace Ui {
 
 class AbstractButton;
@@ -52,6 +56,7 @@ struct PaidReactionBoxArgs {
 	Fn<void(int, uint64)> send;
 	bool videoStreamChoosing = false;
 	bool videoStreamSending = false;
+	bool videoStreamAdmin = false;
 	bool dark = false;
 };
 
@@ -94,8 +99,9 @@ void AddStarSelectBalance(
 	rpl::producer<CreditsAmount> balanceValue,
 	bool dark = false);
 
-not_null<AbstractButton*> AddStarSelectBubble(
-	not_null<GenericBox*> box,
+not_null<Premium::BubbleWidget*> AddStarSelectBubble(
+	not_null<VerticalLayout*> container,
+	rpl::producer<> showFinishes,
 	rpl::producer<int> value,
 	int max,
 	Fn<QColor(int)> activeFgOverride = nullptr);

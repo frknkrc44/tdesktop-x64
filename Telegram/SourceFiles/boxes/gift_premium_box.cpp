@@ -316,8 +316,17 @@ void AddUniqueGiftPropertyRows(
 		const Data::CreditsHistoryEntry &entry,
 		Fn<void()> convertToStars) {
 	auto helper = Ui::Text::CustomEmojiHelper();
+	const auto addUpgradeToValue = !entry.credits.ton()
+		&& !entry.giftUpgradeGifted
+		&& !entry.giftUpgradeSeparate
+		&& entry.starsUpgradedBySender;
+	const auto amount = addUpgradeToValue
+		? CreditsAmount(
+			entry.credits.whole() + entry.starsUpgradedBySender,
+			entry.credits.nano())
+		: entry.credits;
 	const auto price = helper.paletteDependent(Ui::Earn::IconCreditsEmoji(
-	)).append(' ').append(Lang::FormatCreditsAmountDecimal(entry.credits));
+	)).append(' ').append(Lang::FormatCreditsAmountDecimal(amount));
 	auto label = object_ptr<Ui::FlatLabel>(
 		table,
 		rpl::single(price),
@@ -1328,6 +1337,15 @@ void AddStarGiftTable(
 					PeerId(entry.bareEntryOwnerId)),
 				st::giveawayGiftCodePeerMargin);
 		}
+	} else if (entry.auction && entry.bareGiftOwnerId) {
+		AddTableRow(
+			table,
+			tr::lng_credits_box_history_entry_peer(),
+			MakePeerTableValue(
+				table,
+				show,
+				PeerId(entry.bareGiftOwnerId)),
+			st::giveawayGiftCodePeerMargin);
 	} else if (peerId && !giftToSelf) {
 		const auto user = session->data().peer(peerId)->asUser();
 		const auto withSendButton = entry.in && user && !user->isBot();
@@ -1598,11 +1616,30 @@ void AddCreditsHistoryEntryTable(
 			: entry.giftUpgraded
 			? tr::lng_credits_box_history_entry_gift_from()
 			: tr::lng_credits_box_history_entry_peer();
+		const auto targetId = actorId ? actorId : peerId;
+		const auto isPeerDefault = !entry.starrefCommission
+			&& !entry.in
+			&& !entry.giftResale
+			&& !entry.giftUpgraded;
+		const auto user = isPeerDefault
+			? session->data().peer(targetId)->asUser()
+			: nullptr;
+		const auto withSendButton = user
+			&& !user->isInaccessible()
+			&& !user->isBot();
+		auto send = withSendButton ? tr::lng_gift_send_small() : nullptr;
+		auto handler = send
+			? Fn<void()>([=] {
+				if (const auto window = show->resolveWindow()) {
+					Ui::ShowStarGiftBox(window, user);
+				}
+			})
+			: nullptr;
 		AddTableRow(
 			table,
 			std::move(text),
-			show,
-			actorId ? actorId : peerId);
+			MakePeerTableValue(table, show, targetId, send, handler),
+			st::giveawayGiftCodePeerMargin);
 	}
 	if (const auto msgId = MsgId(peerId ? entry.bareMsgId : 0)) {
 		const auto peer = session->data().peer(peerId);
@@ -1761,6 +1798,19 @@ void AddCreditsHistoryEntryTable(
 			tr::lng_credits_box_history_entry_success_url(),
 			rpl::single(
 				Ui::Text::Link(entry.successLink, entry.successLink)));
+	}
+	if (entry.limitedCount > 0 && entry.limitedLeft >= 0) {
+		AddTableRow(
+			table,
+			tr::lng_gift_availability(),
+			tr::lng_gift_availability_left(
+				lt_count_decimal,
+				rpl::single(entry.limitedLeft) | tr::to_count(),
+				lt_amount,
+				rpl::single(TextWithEntities{
+					Lang::FormatCountDecimal(entry.limitedCount)
+				}),
+				Ui::Text::WithEntities));
 	}
 }
 

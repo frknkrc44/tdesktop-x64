@@ -283,7 +283,7 @@ private:
 	void addSupportInfo();
 	void addInfo();
 	void addStoryArchive();
-	void addNewWindow();
+	void addNewWindow(bool addSeparator = true);
 	void addToggleFolder();
 	void addToggleUnreadMark();
 	void addToggleArchive();
@@ -679,7 +679,7 @@ void Filler::addToggleUnreadMark() {
 	}, (unread ? &st::menuIconMarkRead : &st::menuIconMarkUnread));
 }
 
-void Filler::addNewWindow() {
+void Filler::addNewWindow(bool addSeparator) {
 	const auto controller = _controller;
 	if (_folder) {
 		_addAction(tr::lng_context_new_window(tr::now), [=] {
@@ -688,7 +688,9 @@ void Filler::addNewWindow() {
 				SeparateType::Archive,
 				&controller->session()));
 		}, &st::menuIconNewWindow);
-		AddSeparatorAndShiftUp(_addAction);
+		if (addSeparator) {
+			AddSeparatorAndShiftUp(_addAction);
+		}
 		return;
 	} else if (const auto weak = base::make_weak(_sublist)) {
 		_addAction(tr::lng_context_new_window(tr::now), [=] {
@@ -699,7 +701,9 @@ void Filler::addNewWindow() {
 					sublist));
 			}
 		}, &st::menuIconNewWindow);
-		AddSeparatorAndShiftUp(_addAction);
+		if (addSeparator) {
+			AddSeparatorAndShiftUp(_addAction);
+		}
 		return;
 	}
 	const auto history = _request.key.history();
@@ -725,7 +729,9 @@ void Filler::addNewWindow() {
 				strong));
 		}
 	}, &st::menuIconNewWindow);
-	AddSeparatorAndShiftUp(_addAction);
+	if (addSeparator) {
+		AddSeparatorAndShiftUp(_addAction);
+	}
 }
 
 void Filler::addToggleArchive() {
@@ -917,11 +923,19 @@ void Filler::addDirectMessages() {
 }
 
 void Filler::addExportChat() {
-	if (_thread->asTopic() || !_peer->canExportChatHistory()) {
+	if (!_peer->canExportChatHistory()) {
 		return;
 	}
 	const auto peer = _peer;
 	const auto navigation = _controller;
+	if (const auto topic = _thread->asTopic()) {
+		const auto topicRootId = topic->rootId();
+		_addAction(
+			tr::lng_profile_export_topic(tr::now),
+			[=] { PeerMenuExportTopic(navigation, peer, topicRootId); },
+			&st::menuIconExport);
+		return;
+	}
 	_addAction(
 		tr::lng_profile_export_chat(tr::now),
 		[=] { PeerMenuExportChat(navigation, peer); },
@@ -1740,7 +1754,7 @@ void Filler::fillArchiveActions() {
 }
 
 void Filler::fillSavedSublistActions() {
-	addNewWindow();
+	addNewWindow(false);
 	addTogglePin();
 }
 
@@ -1828,6 +1842,17 @@ void PeerMenuExportChat(
 		not_null<PeerData*> peer) {
 	base::call_delayed(st::defaultPopupMenu.showDuration, [=] {
 		Core::App().exportManager().start(peer);
+	});
+}
+
+void PeerMenuExportTopic(
+		not_null<Window::SessionNavigation*> navigation,
+		not_null<PeerData*> peer,
+		MsgId topicRootId) {
+	base::call_delayed(st::defaultPopupMenu.showDuration, [=] {
+		const auto topic = peer->forumTopicFor(topicRootId);
+		const auto topicTitle = topic ? topic->title() : QString();
+		Core::App().exportManager().startTopic(peer, topicRootId, topicTitle);
 	});
 }
 

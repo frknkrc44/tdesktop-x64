@@ -89,6 +89,10 @@ struct StoriesInfo {
 	int count = 0;
 };
 
+struct ProfileMusicInfo {
+	int count = 0;
+};
+
 struct FileLocation {
 	int dcId = 0;
 	MTPInputFileLocation data;
@@ -929,6 +933,11 @@ struct StoriesSlice {
 StoriesSlice ParseStoriesSlice(
 	const MTPVector<MTPStoryItem> &data,
 	int baseIndex);
+
+struct ProfileMusicSlice {
+	std::vector<Message> list;
+	int skipped = 0;
+};
 
 Message ParseMessage(
 	ParseMediaContext &context,

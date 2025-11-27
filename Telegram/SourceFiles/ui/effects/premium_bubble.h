@@ -56,7 +56,6 @@ public:
 	[[nodiscard]] int height() const;
 	[[nodiscard]] int width() const;
 	[[nodiscard]] int bubbleRadius() const;
-	[[nodiscard]] int countMaxWidth(int maxPossibleCounter) const;
 	[[nodiscard]] int countTargetWidth(int targetCounter) const;
 	[[nodiscard]] QRect bubbleGeometry(const QRect &r) const;
 
@@ -65,11 +64,16 @@ public:
 	void setFlipHorizontal(bool value);
 	void paintBubble(QPainter &p, const QRect &r, const QBrush &brush);
 	[[nodiscard]] QPainterPath bubblePath(const QRect &r) const;
+	void setSubtext(QString subtext);
+
+	void finishAnimating();
 
 	[[nodiscard]] rpl::producer<> widthChanges() const;
 
 private:
 	[[nodiscard]] int filledWidth() const;
+	[[nodiscard]] int topTextWidth() const;
+	[[nodiscard]] int bottomTextWidth() const;
 
 	const style::PremiumBubble &_st;
 
@@ -79,8 +83,8 @@ private:
 	const style::icon *_icon;
 	NumbersAnimation _numberAnimation;
 	Text::String _additional;
+	Text::String _subtext;
 	const int _height;
-	const int _textTop;
 	const bool _hasTail;
 
 	std::optional<int> _counter;
@@ -120,6 +124,7 @@ public:
 		const style::margins &outerPadding);
 
 	void setBrushOverride(std::optional<QBrush> brushOverride);
+	void setSubtext(QString subtext);
 
 protected:
 	void paintEvent(QPaintEvent *e) override;
@@ -150,6 +155,7 @@ private:
 	const style::margins _outerPadding;
 
 	Ui::Animations::Simple _appearanceAnimation;
+	Fn<void(float64)> _appearanceCallback;
 	QSize _spaceForDeflection;
 
 	QLinearGradient _cachedGradient;

@@ -1519,11 +1519,12 @@ void AddUpgradeButton(
 }
 
 void AddSoldLeftSlider(
-		not_null<RoundButton*> button,
-		const GiftTypeStars &gift) {
+		not_null<RpWidget*> above,
+		const GiftTypeStars &gift,
+		QMargins added = {}) {
 	const auto still = gift.info.limitedLeft;
 	const auto total = gift.info.limitedCount;
-	const auto slider = CreateChild<RpWidget>(button->parentWidget());
+	const auto slider = CreateChild<RpWidget>(above->parentWidget());
 	struct State {
 		Text::String still;
 		Text::String sold;
@@ -1540,13 +1541,13 @@ void AddSoldLeftSlider(
 	state->height = st::giftLimitedPadding.top()
 		+ st::semiboldFont->height
 		+ st::giftLimitedPadding.bottom();
-	button->geometryValue() | rpl::start_with_next([=](QRect geometry) {
+	above->geometryValue() | rpl::start_with_next([=](QRect geometry) {
 		const auto space = st::giftLimitedBox.buttonPadding.top();
 		const auto skip = (space - state->height) / 2;
 		slider->setGeometry(
-			geometry.x(),
+			geometry.x() + added.left(),
 			geometry.y() - skip - state->height,
-			geometry.width(),
+			geometry.width() - added.left() - added.right(),
 			state->height);
 	}, slider->lifetime());
 	slider->paintRequest() | rpl::start_with_next([=] {
@@ -1731,6 +1732,49 @@ void CheckMaybeGiftLocked(
 							.forceTon = star->forceTon,
 						},
 						Settings::CreditsEntryBoxStyleOverrides()));
+				} else if (unique && star->mine && !peer->isSelf()) {
+					if (ShowTransferGiftLater(window->uiShow(), unique)) {
+						return;
+					}
+					const auto done = [=] {
+						window->session().credits().load(true);
+						window->showPeerHistory(peer);
+					};
+					if (state->transferRequested == unique) {
+						return;
+					}
+					state->transferRequested = unique;
+					const auto savedId = star->transferId;
+					using Payments::CheckoutResult;
+					const auto formReady = [=](
+							uint64 formId,
+							CreditsAmount price,
+							std::optional<CheckoutResult> failure) {
+						state->transferRequested = nullptr;
+						if (!failure && !price.stars()) {
+							LOG(("API Error: "
+								"Bad transfer invoice currenct."));
+						} else if (!failure
+							|| *failure == CheckoutResult::Free) {
+							unique->starsForTransfer = failure
+								? 0
+								: price.whole();
+							ShowTransferToBox(
+								window,
+								peer,
+								unique,
+								savedId,
+								done);
+						} else if (*failure == CheckoutResult::Cancelled) {
+							done();
+						}
+					};
+					RequestOurForm(
+						window->uiShow(),
+						MTP_inputInvoiceStarGiftTransfer(
+							Api::InputSavedStarGiftId(savedId, unique),
+							peer->input),
+						formReady);
 				} else if (star && star->resale) {
 					const auto id = star->info.id;
 					if (state->resaleRequestingId == id) {
@@ -1780,49 +1824,6 @@ void CheckMaybeGiftLocked(
 						}
 					});
 					CheckMaybeGiftLocked(window, star->info.id, ready);
-				} else if (unique && star->mine && !peer->isSelf()) {
-					if (ShowTransferGiftLater(window->uiShow(), unique)) {
-						return;
-					}
-					const auto done = [=] {
-						window->session().credits().load(true);
-						window->showPeerHistory(peer);
-					};
-					if (state->transferRequested == unique) {
-						return;
-					}
-					state->transferRequested = unique;
-					const auto savedId = star->transferId;
-					using Payments::CheckoutResult;
-					const auto formReady = [=](
-							uint64 formId,
-							CreditsAmount price,
-							std::optional<CheckoutResult> failure) {
-						state->transferRequested = nullptr;
-						if (!failure && !price.stars()) {
-							LOG(("API Error: "
-								"Bad transfer invoice currenct."));
-						} else if (!failure
-							|| *failure == CheckoutResult::Free) {
-							unique->starsForTransfer = failure
-								? 0
-								: price.whole();
-							ShowTransferToBox(
-								window,
-								peer,
-								unique,
-								savedId,
-								done);
-						} else if (*failure == CheckoutResult::Cancelled) {
-							done();
-						}
-					};
-					RequestOurForm(
-						window->uiShow(),
-						MTP_inputInvoiceStarGiftTransfer(
-							Api::InputSavedStarGiftId(savedId, unique),
-							peer->input),
-						formReady);
 				} else if (star
 						&& star->info.perUserTotal
 						&& !star->info.perUserRemains) {
@@ -4459,6 +4460,7 @@ void SendGiftBox(
 		const GiftDescriptor &descriptor,
 		rpl::producer<Data::GiftAuctionState> auctionState) {
 	const auto stars = std::get_if<GiftTypeStars>(&descriptor);
+	const auto auction = !!auctionState;
 	const auto limited = stars
 		&& (stars->info.limitedCount > stars->info.limitedLeft)
 		&& (stars->info.limitedLeft > 0);
@@ -4469,7 +4471,7 @@ void SendGiftBox(
 		: Api::DisallowedGiftTypes();
 	const auto disallowLimited = !peer->isSelf()
 		&& (disallowed & Api::DisallowedGiftType::Limited);
-	box->setStyle(limited ? st::giftLimitedBox : st::giftBox);
+	box->setStyle((limited && !auction) ? st::giftLimitedBox : st::giftBox);
 	box->setWidth(st::boxWideWidth);
 	box->setTitle(tr::lng_gift_send_title());
 	box->addTopButton(st::boxTitleClose, [=] {
@@ -4741,7 +4743,47 @@ void SendGiftBox(
 		SendGift(window, peer, api, details, done);
 	});
 	if (limited) {
-		AddSoldLeftSlider(button, *stars);
+		if (auction) {
+			const auto &now = state->auction.current();
+			const auto rounds = now.totalRounds;
+			const auto perRound = now.gift->auctionGiftsPerRound;
+			auto owned = object_ptr<Ui::FlatLabel>(
+				container,
+				rpl::single(tr::lng_auction_about_top_short(
+					tr::now,
+					lt_count,
+					perRound,
+					lt_bidders,
+					tr::lng_auction_about_top_bidders(
+						tr::now,
+						lt_count,
+						perRound,
+						tr::rich),
+					lt_link,
+					tr::lng_auction_text_link(
+						tr::now,
+						lt_arrow,
+						Text::IconEmoji(&st::textMoreIconEmoji),
+						tr::link),
+					tr::rich)),
+				st::defaultDividerLabel.label);
+			const auto label = owned.data();
+			const auto about = container->add(
+				object_ptr<Ui::DividerLabel>(
+					container,
+					std::move(owned),
+					st::defaultBoxDividerLabelPadding),
+				{ 0, st::giftLimitedBox.buttonPadding.top(), 0, 0 });
+			AddSoldLeftSlider(about, *stars, st::boxRowPadding);
+
+			const auto show = window->uiShow();
+			label->setClickHandlerFilter([=](const auto &...) {
+				show->show(Box(AuctionAboutBox, rounds, perRound, nullptr));
+				return false;
+			});
+		} else {
+			AddSoldLeftSlider(button, *stars);
+		}
 	}
 	if (stars && stars->info.auction()) {
 		SetAuctionButtonCountdownText(
