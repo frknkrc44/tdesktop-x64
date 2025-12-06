@@ -76,6 +76,15 @@ jobs:
 
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
+      - name: Free up some disk space.
+        uses: hugoalh/disk-space-optimizer-ghaction@271735125a1b35180620eae7e45c2e9d470c31b0
+        with:
+          general_include: ".+"
+          homebrew_prune: "True"
+          homebrew_clean: "True"
+          npm_prune: "True"
+          npm_clean: "True"
+
       - name: Restore ThirdParty cache.
         id: cache-third-party
         uses: actions/cache/restore@v4
@@ -97,9 +106,7 @@ jobs:
           ./$REPO_NAME/Telegram/build/prepare/mac.sh silent
 
       - name: Free up some disk space.
-        run: |
-          cd Libraries
-          find . -iname "*.dir" -exec rm -rf {} || true \;
+        run: find Libraries -iwholename "*.dir/*" -delete
 
       - name: Telegram Desktop build.
         if: env.ONLY_CACHE == 'false'
