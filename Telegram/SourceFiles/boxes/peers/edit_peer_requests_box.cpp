@@ -488,8 +488,8 @@ void RequestsBoxController::processRequest(
 				: tr::lng_group_requests_was_added)(
 					tr::now,
 					lt_user,
-					Ui::Text::Bold(user->name()),
-					Ui::Text::WithEntities));
+					tr::bold(user->name()),
+					tr::marked));
 		}
 	});
 	if (banned) {

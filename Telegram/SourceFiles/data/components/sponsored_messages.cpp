@@ -24,7 +24,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "main/main_session.h"
 #include "ui/chat/sponsored_message_bar.h"
-#include "ui/text/text_utilities.h" // Ui::Text::RichLangValue.
+#include "ui/text/text_utilities.h" // tr::rich.
 
 namespace Data {
 namespace {
@@ -58,7 +58,7 @@ SponsoredMessages::SponsoredMessages(not_null<Main::Session*> session)
 , _clearTimer([=] { clearOldRequests(); }) {
 	Data::AmPremiumValue(
 		_session
-	) | rpl::start_with_next([=](bool premium) {
+	) | rpl::on_next([=](bool premium) {
 		if (premium) {
 			clear();
 		}
@@ -554,7 +554,7 @@ void SponsoredMessages::append(
 			tr::now,
 			lt_text,
 			{ .text = qs(*data.vsponsor_info()) },
-			Ui::Text::RichLangValue)
+			tr::rich)
 		: TextWithEntities();
 	auto additionalInfo = TextWithEntities::Simple(
 		data.vadditional_info() ? qs(*data.vadditional_info()) : QString());

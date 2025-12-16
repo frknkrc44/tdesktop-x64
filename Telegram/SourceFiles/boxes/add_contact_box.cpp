@@ -161,7 +161,7 @@ void MustBePublicFailed(
 TextWithEntities PeerFloodErrorText(
 		not_null<Main::Session*> session,
 		PeerFloodType type) {
-	const auto link = Ui::Text::Link(
+	const auto link = tr::link(
 		tr::lng_cant_more_info(tr::now),
 		session->createInternalLinkFull(u"spambot"_q));
 	return ((type == PeerFloodType::InviteGroup)
@@ -170,7 +170,7 @@ TextWithEntities PeerFloodErrorText(
 			tr::now,
 			lt_more_info,
 			link,
-			Ui::Text::WithEntities);
+			tr::marked);
 }
 
 void ShowAddParticipantsError(
@@ -325,9 +325,9 @@ void AddContactBox::prepare() {
 
 	const auto submitted = [=] { submit(); };
 	_first->submits(
-	) | rpl::start_with_next(submitted, _first->lifetime());
+	) | rpl::on_next(submitted, _first->lifetime());
 	_last->submits(
-	) | rpl::start_with_next(submitted, _last->lifetime());
+	) | rpl::on_next(submitted, _last->lifetime());
 	connect(_phone, &Ui::PhoneInput::submitted, [=] { submit(); });
 
 	setDimensions(
@@ -599,13 +599,13 @@ void GroupInfoBox::prepare() {
 			Core::App().settings().sendSubmitWay());
 
 		_description->heightChanges(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			descriptionResized();
 		}, _description->lifetime());
 		_description->submits(
-		) | rpl::start_with_next([=] { submit(); }, _description->lifetime());
+		) | rpl::on_next([=] { submit(); }, _description->lifetime());
 		_description->cancelled(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			closeBox();
 		}, _description->lifetime());
 
@@ -615,7 +615,7 @@ void GroupInfoBox::prepare() {
 			&_navigation->session());
 	}
 	_title->submits(
-	) | rpl::start_with_next([=] { submitName(); }, _title->lifetime());
+	) | rpl::on_next([=] { submitName(); }, _title->lifetime());
 
 	addButton(
 		((_type != Type::Group || _canAddBot)
@@ -921,7 +921,7 @@ void GroupInfoBox::checkInviteLink() {
 		_createdChannel->session().changes().peerUpdates(
 			_createdChannel,
 			Data::PeerUpdate::Flag::FullInfo
-		) | rpl::take(1) | rpl::start_with_next([=] {
+		) | rpl::take(1) | rpl::on_next([=] {
 			checkInviteLink();
 		}, lifetime());
 	}
@@ -1064,11 +1064,11 @@ void SetupChannelBox::prepare() {
 	_channel->session().changes().peerUpdates(
 		_channel,
 		Data::PeerUpdate::Flag::InviteLinks
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		rtlupdate(_invitationLink);
 	}, lifetime());
 
-	boxClosing() | rpl::start_with_next([=] {
+	boxClosing() | rpl::on_next([=] {
 		if (!_mustBePublic) {
 			AddParticipantsBoxController::Start(_navigation, _channel);
 		}
@@ -1496,7 +1496,7 @@ void SetupChannelBox::showRevokePublicLinkBoxForEdit() {
 		Box(PublicLinksLimitBox, navigation, callback));
 	const auto session = &navigation->session();
 	revoker->boxClosing(
-	) | rpl::start_with_next(crl::guard(session, [=] {
+	) | rpl::on_next(crl::guard(session, [=] {
 		base::call_delayed(200, session, [=] {
 			if (*revoked) {
 				return;
@@ -1564,19 +1564,19 @@ void EditNameBox::prepare() {
 	_last->setMaxLength(Ui::EditPeer::kMaxUserFirstLastName);
 
 	_first->submits(
-	) | rpl::start_with_next([=] { submit(); }, _first->lifetime());
+	) | rpl::on_next([=] { submit(); }, _first->lifetime());
 	_last->submits(
-	) | rpl::start_with_next([=] { submit(); }, _last->lifetime());
+	) | rpl::on_next([=] { submit(); }, _last->lifetime());
 
 	_first->customTab(true);
 	_last->customTab(true);
 
 	_first->tabbed(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_last->setFocus();
 	}, _first->lifetime());
 	_last->tabbed(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_first->setFocus();
 	}, _last->lifetime());
 }

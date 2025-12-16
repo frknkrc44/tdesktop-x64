@@ -548,7 +548,7 @@ OverlayWidget::OverlayWidget()
 	CrashReports::SetAnnotation("OpenGL Renderer", "[not-initialized]");
 
 	Lang::Updated(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		refreshLang();
 	}, lifetime());
 
@@ -566,7 +566,7 @@ OverlayWidget::OverlayWidget()
 	_docRectImage.setDevicePixelRatio(style::DevicePixelRatio());
 
 	Shortcuts::Requests(
-	) | rpl::start_with_next([=](not_null<Shortcuts::Request*> request) {
+	) | rpl::on_next([=](not_null<Shortcuts::Request*> request) {
 		request->check(
 			Shortcuts::Command::MediaViewerFullscreen
 		) && request->handle([=] {
@@ -703,7 +703,7 @@ OverlayWidget::OverlayWidget()
 		return base::EventFilterResult::Continue;
 	});
 	_helper->mouseEvents(
-	) | rpl::start_with_next([=](not_null<QMouseEvent*> e) {
+	) | rpl::on_next([=](not_null<QMouseEvent*> e) {
 		if (_helper->skipTitleHitTest(e->windowPos().toPoint())) {
 			return;
 		}
@@ -723,13 +723,13 @@ OverlayWidget::OverlayWidget()
 	}, lifetime());
 	_topShadowRight = _helper->controlsSideRightValue();
 	_topShadowRight.changes(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		updateControlsGeometry();
 		update();
 	}, lifetime());
 
 	_helper->topNotchSkipValue(
-	) | rpl::start_with_next([=](int notch) {
+	) | rpl::on_next([=](int notch) {
 		if (_topNotchSize != notch) {
 			_topNotchSize = notch;
 			if (_fullscreen) {
@@ -751,7 +751,7 @@ OverlayWidget::OverlayWidget()
 	_widget->setMouseTracking(true);
 
 	_window->screenValue(
-	) | rpl::skip(1) | rpl::start_with_next([=](not_null<QScreen*> screen) {
+	) | rpl::skip(1) | rpl::on_next([=](not_null<QScreen*> screen) {
 		handleScreenChanged(screen);
 	}, lifetime());
 	subscribeToScreenGeometry();
@@ -772,7 +772,7 @@ OverlayWidget::OverlayWidget()
 		Core::App().calls().currentCallValue(),
 		Core::App().calls().currentGroupCallValue(),
 		_1 || _2
-	) | rpl::start_with_next([=](bool call) {
+	) | rpl::on_next([=](bool call) {
 		if (!_streamed
 			|| !_document
 			|| (_document->isAnimation() && !_document->isVideoMessage())) {
@@ -789,7 +789,7 @@ OverlayWidget::OverlayWidget()
 
 	_controlsHideTimer.setCallback([=] { hideControls(); });
 	_helper->controlsActivations(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		activateControls();
 	}, lifetime());
 
@@ -809,10 +809,10 @@ void OverlayWidget::showSaveMsgToast(const QString &path, auto phrase) {
 		phrase(
 			tr::now,
 			lt_downloads,
-			Ui::Text::Link(
+			tr::link(
 				tr::lng_mediaview_downloads(tr::now),
 				"internal:show_saved_message"),
-			Ui::Text::WithEntities),
+			tr::marked),
 		st::mediaviewSaveMsgShown);
 }
 
@@ -883,7 +883,7 @@ void OverlayWidget::setupWindow() {
 		{ st::mediaviewMinWidth, st::mediaviewMinHeight });
 
 	_window->shownValue(
-	) | rpl::start_with_next([=](bool shown) {
+	) | rpl::on_next([=](bool shown) {
 		toggleApplicationEventFilter(shown);
 		if (!shown) {
 			clearAfterHide();
@@ -1375,10 +1375,10 @@ void OverlayWidget::showPremiumDownloadPromo() {
 		.text = tr::lng_stories_save_promo(
 			tr::now,
 			lt_link,
-			Ui::Text::Link(
-				Ui::Text::Bold(
+			tr::link(
+				tr::bold(
 					tr::lng_send_as_premium_required_link(tr::now))),
-			Ui::Text::WithEntities),
+			tr::marked),
 		.filter = filter,
 		.adaptive = true,
 		.duration = kStorySavePromoDuration,
@@ -1739,7 +1739,7 @@ void OverlayWidget::fillContextMenuActions(
 			) | rpl::then(
 				base::timer_each(120)
 			) | rpl::map(now);
-			state->text.changes() | rpl::start_with_next([=](QString value) {
+			state->text.changes() | rpl::on_next([=](QString value) {
 				action->setText(value);
 			}, state->lifetime);
 		}
@@ -1823,7 +1823,7 @@ void OverlayWidget::fillContextMenuActions(
 			peer->session().changes().peerFlagsValue(
 				peer,
 				Data::PeerUpdate::Flag::Photo
-			) | rpl::start_with_next([=]() mutable {
+			) | rpl::on_next([=]() mutable {
 				if (lifetime) {
 					base::take(lifetime)->destroy();
 				}
@@ -2461,7 +2461,7 @@ void OverlayWidget::assignMediaPointer(
 		std::move(call),
 		_callLinkSlug,
 		_callJoinMessageId);
-	_videoStream->closeRequests() | rpl::start_with_next([=] {
+	_videoStream->closeRequests() | rpl::on_next([=] {
 		close();
 	}, _videoStream->lifetime());
 	if (const auto stories = _stories.get()) {
@@ -2625,7 +2625,7 @@ void OverlayWidget::subscribeToScreenGeometry() {
 		&QScreen::geometryChanged
 	) | rpl::filter([=] {
 		return !isHidden() && !isMinimized() && _fullscreen;
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		updateGeometry();
 	}, _screenGeometryLifetime);
 }
@@ -3242,7 +3242,7 @@ void OverlayWidget::validateSharedMedia() {
 			*key,
 			kIdsLimit,
 			kIdsLimit
-		) | rpl::start_with_next([this](
+		) | rpl::on_next([this](
 				SharedMediaWithLastSlice &&update) {
 			handleSharedMediaUpdate(std::move(update));
 		}, _sharedMedia->lifetime);
@@ -3305,7 +3305,7 @@ void OverlayWidget::validateUserPhotos() {
 			*key,
 			kIdsLimit,
 			kIdsLimit
-		) | rpl::start_with_next([this](
+		) | rpl::on_next([this](
 				UserPhotosSlice &&update) {
 			handleUserPhotosUpdate(std::move(update));
 		}, _userPhotos->lifetime);
@@ -3437,7 +3437,7 @@ void OverlayWidget::refreshCaption() {
 				if (media->webpage()) {
 					if (_message->isSponsored()) {
 						return TextWithEntities()
-							.append(Ui::Text::Bold(media->webpage()->title))
+							.append(tr::bold(media->webpage()->title))
 							.append('\n')
 							.append(media->webpage()->description);
 					}
@@ -3526,7 +3526,7 @@ void OverlayWidget::initGroupThumbs() {
 	Expects(_groupThumbs != nullptr);
 
 	_groupThumbs->updateRequests(
-	) | rpl::start_with_next([this](QRect rect) {
+	) | rpl::on_next([this](QRect rect) {
 		const auto shift = (width() / 2);
 		_groupThumbsRect = QRect(
 			shift + rect.x(),
@@ -3537,7 +3537,7 @@ void OverlayWidget::initGroupThumbs() {
 	}, _groupThumbs->lifetime());
 
 	_groupThumbs->activateRequests(
-	) | rpl::start_with_next([this](View::GroupThumbs::Key key) {
+	) | rpl::on_next([this](View::GroupThumbs::Key key) {
 		using CollageKey = View::GroupThumbs::CollageKey;
 		if (const auto photoId = std::get_if<PhotoId>(&key)) {
 			const auto photo = _session->data().photo(*photoId);
@@ -4130,7 +4130,7 @@ bool OverlayWidget::initStreaming(const StartStreaming &startStreaming) {
 	Core::App().updateNonIdle();
 
 	_streamed->instance.player().updates(
-	) | rpl::start_with_next_error([=](Streaming::Update &&update) {
+	) | rpl::on_next_error([=](Streaming::Update &&update) {
 		handleStreamingUpdate(std::move(update));
 	}, [=](Streaming::Error &&error) {
 		handleStreamingError(std::move(error));
@@ -4139,7 +4139,7 @@ bool OverlayWidget::initStreaming(const StartStreaming &startStreaming) {
 	_streamed->instance.switchQualityRequests(
 	) | rpl::filter([=](int quality) {
 		return !_quality.manual && _quality.height != quality;
-	}) | rpl::start_with_next([=](int quality) {
+	}) | rpl::on_next([=](int quality) {
 		applyVideoQuality({
 			.manual = 0,
 			.height = uint32(quality),
@@ -4339,7 +4339,7 @@ bool OverlayWidget::createStreamingObjects() {
 			: nullptr;
 		if (const auto sponsored = _streamed->sponsored.get()) {
 			_layerBg->layerShownValue(
-			) | rpl::start_with_next([=](bool shown) {
+			) | rpl::on_next([=](bool shown) {
 				sponsored->setPaused(shown);
 			}, sponsored->lifetime());
 		}
@@ -4872,14 +4872,14 @@ void OverlayWidget::switchToPip() {
 		raw->history()->owner().itemRemoved(
 		) | rpl::filter([=](not_null<const HistoryItem*> item) {
 			return (raw == item);
-		}) | rpl::start_with_next([=] {
+		}) | rpl::on_next([=] {
 			_pip = nullptr;
 		}, _pip->lifetime);
 
 		Core::App().passcodeLockChanges(
 		) | rpl::filter(
 			rpl::mappers::_1
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			_pip = nullptr;
 		}, _pip->lifetime);
 	}
@@ -6057,7 +6057,7 @@ void OverlayWidget::setStoriesPeer(PeerData *peer) {
 		const auto delegate = static_cast<Stories::Delegate*>(this);
 		_stories = std::make_unique<Stories::View>(delegate);
 		_stories->finalShownGeometryValue(
-		) | rpl::skip(1) | rpl::start_with_next([=] {
+		) | rpl::skip(1) | rpl::on_next([=] {
 			updateControlsGeometry();
 		}, _stories->lifetime());
 		_storiesChanged.fire({});
@@ -6074,7 +6074,7 @@ void OverlayWidget::setSession(not_null<Main::Session*> session) {
 	_window->setWindowIcon(Window::CreateIcon(session));
 
 	session->downloaderTaskFinished(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (!isHidden()) {
 			updateControls();
 			checkForSaveLoaded();
@@ -6084,25 +6084,25 @@ void OverlayWidget::setSession(not_null<Main::Session*> session) {
 	session->data().documentLoadProgress(
 	) | rpl::filter([=] {
 		return !isHidden();
-	}) | rpl::start_with_next([=](not_null<DocumentData*> document) {
+	}) | rpl::on_next([=](not_null<DocumentData*> document) {
 		documentUpdated(document);
 	}, _sessionLifetime);
 
 	session->data().itemIdChanged(
-	) | rpl::start_with_next([=](const Data::Session::IdChange &change) {
+	) | rpl::on_next([=](const Data::Session::IdChange &change) {
 		changingMsgId(change.newId, change.oldId);
 	}, _sessionLifetime);
 
 	session->data().itemRemoved(
 	) | rpl::filter([=](not_null<const HistoryItem*> item) {
 		return (_message == item);
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		close();
 		clearSession();
 	}, _sessionLifetime);
 
 	session->account().sessionChanges(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		clearSession();
 	}, _sessionLifetime);
 }
@@ -6834,7 +6834,7 @@ void OverlayWidget::applyHideWindowWorkaround() {
 		raw->setGeometry(_window->rect());
 		raw->show();
 		raw->paintRequest(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			if (_hideWorkaround.get() == raw) {
 				_hideWorkaround.release();
 			}

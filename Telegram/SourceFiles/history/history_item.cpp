@@ -427,7 +427,7 @@ HistoryItem::HistoryItem(
 	} else if (checked == MediaCheckResult::Empty) {
 		AddComponents(HistoryServiceData::Bit());
 		setServiceText({
-			tr::lng_message_empty(tr::now, Ui::Text::WithEntities)
+			tr::lng_message_empty(tr::now, tr::marked)
 		});
 	} else if ((checked == MediaCheckResult::HasUnsupportedTimeToLive)
 			|| (checked == MediaCheckResult::HasExpiredMediaTimeToLive)) {
@@ -557,7 +557,7 @@ HistoryItem::HistoryItem(
 	{ .id = id, .flags = localFlags },
 	PreparedServiceText{ tr::lng_message_empty(
 		tr::now,
-		Ui::Text::WithEntities) }) {
+		tr::marked) }) {
 }
 
 HistoryItem::HistoryItem(
@@ -1980,6 +1980,15 @@ not_null<Data::Thread*> HistoryItem::notificationThread() const {
 	return _history;
 }
 
+Data::Thread *HistoryItem::maybeNotificationThread() const {
+	if (const auto rootId = topicRootId()) {
+		if (const auto forum = _history->asForum()) {
+			return forum->topicFor(rootId);
+		}
+	}
+	return _history;
+}
+
 Data::ForumTopic *HistoryItem::topic() const {
 	if (const auto rootId = topicRootId()) {
 		if (const auto forum = _history->asForum()) {
@@ -2393,13 +2402,13 @@ void HistoryItem::clearMediaAsExpired() {
 			? tr::lng_ttl_voice_expired
 			: document->isVideoMessage()
 			? tr::lng_ttl_round_expired
-			: tr::lng_message_empty)(tr::now, Ui::Text::WithEntities);
+			: tr::lng_message_empty)(tr::now, tr::marked);
 		updateServiceText({ std::move(text) });
 		_flags |= MessageFlag::ReactionsAllowed;
 	} else if (media->photo()) {
 		applyEditionToHistoryCleared();
 		updateServiceText({
-			tr::lng_ttl_photo_expired(tr::now, Ui::Text::WithEntities)
+			tr::lng_ttl_photo_expired(tr::now, tr::marked)
 		});
 		_flags |= MessageFlag::ReactionsAllowed;
 	}
@@ -4627,7 +4636,7 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 
 			if (out()) {
 				return {
-					tr::lng_ttl_photo_sent(tr::now, Ui::Text::WithEntities)
+					tr::lng_ttl_photo_sent(tr::now, tr::marked)
 				};
 			} else {
 				auto result = PreparedServiceText();
@@ -4636,12 +4645,12 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 					tr::now,
 					lt_from,
 					fromLinkText(), // Link 1.
-					Ui::Text::WithEntities);
+					tr::marked);
 				return result;
 			}
 		} else {
 			return {
-				tr::lng_ttl_photo_expired(tr::now, Ui::Text::WithEntities)
+				tr::lng_ttl_photo_expired(tr::now, tr::marked)
 			};
 		}
 	}, [&](const MTPDmessageMediaDocument &data) -> PreparedServiceText {
@@ -4654,7 +4663,7 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 					return {
 						tr::lng_ttl_video_sent(
 							tr::now,
-							Ui::Text::WithEntities)
+							tr::marked)
 					};
 				} else {
 					auto result = PreparedServiceText();
@@ -4663,7 +4672,7 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 						tr::now,
 						lt_from,
 						fromLinkText(), // Link 1.
-						Ui::Text::WithEntities);
+						tr::marked);
 					return result;
 				}
 			} else if (out()) {
@@ -4671,7 +4680,7 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 					? tr::lng_ttl_voice_sent
 					: data.is_round()
 					? tr::lng_ttl_round_sent
-					: tr::lng_message_empty)(tr::now, Ui::Text::WithEntities);
+					: tr::lng_message_empty)(tr::now, tr::marked);
 				return { std::move(text) };
 			}
 			return {};
@@ -4682,7 +4691,7 @@ PreparedServiceText HistoryItem::prepareServiceTextForMessage(
 				? tr::lng_ttl_voice_expired
 				: data.is_round()
 				? tr::lng_ttl_round_expired
-				: tr::lng_message_empty)(tr::now, Ui::Text::WithEntities);
+				: tr::lng_message_empty)(tr::now, tr::marked);
 			return { std::move(text) };
 		}
 	}, [](const auto &) {
@@ -4820,7 +4829,7 @@ void HistoryItem::createServiceFromMtp(const MTPDmessageService &message) {
 			: (*has)
 			? PeerHasThisCallValue(
 				peer,
-				id) | rpl::skip(1) | rpl::type_erased()
+				id) | rpl::skip(1) | rpl::type_erased
 			: rpl::producer<bool>();
 		if (!hasLink) {
 			RemoveComponents(HistoryServiceOngoingCall::Bit());
@@ -4831,7 +4840,7 @@ void HistoryItem::createServiceFromMtp(const MTPDmessageService &message) {
 			call->lifetime.destroy();
 
 			const auto users = data.vusers().v;
-			std::move(hasLink) | rpl::start_with_next([=](bool has) {
+			std::move(hasLink) | rpl::on_next([=](bool has) {
 				updateServiceText(
 					prepareInvitedToCallText(
 						ParseInvitedToCallUsers(this, users),
@@ -5032,7 +5041,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					tr::now,
 					lt_from,
 					fromLinkText(), // Link 1.
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.links.push_back(fromLink());
 				result.links.push_back(u->createOpenLink());
@@ -5041,8 +5050,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					lt_from,
 					fromLinkText(), // Link 1.
 					lt_user,
-					Ui::Text::Link(u->name(), 2), // Link 2.
-					Ui::Text::WithEntities);
+					tr::link(u->name(), 2), // Link 2.
+					tr::marked);
 			}
 		} else if (users.isEmpty()) {
 			result.links.push_back(fromLink());
@@ -5052,14 +5061,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				fromLinkText(), // Link 1.
 				lt_user,
 				{ .text = u"somebody"_q },
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			for (auto i = 0, l = int(users.size()); i != l; ++i) {
 				auto user = _history->owner().user(users[i].v);
 				result.links.push_back(user->createOpenLink());
 
-				auto linkText = Ui::Text::Link(user->name(), 2 + i);
+				auto linkText = tr::link(user->name(), 2 + i);
 				if (i == 0) {
 					result.text = linkText;
 				} else if (i + 1 == l) {
@@ -5069,7 +5078,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						result.text,
 						lt_user,
 						linkText,
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.text = tr::lng_action_add_users_and_one(
 						tr::now,
@@ -5077,7 +5086,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						result.text,
 						lt_user,
 						linkText,
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}
 			result.text = tr::lng_action_add_users_many(
@@ -5086,7 +5095,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				fromLinkText(), // Link 1.
 				lt_users,
 				result.text,
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5098,7 +5107,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			tr::now,
 			lt_from,
 			fromLinkText(), // Link 1.
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5107,7 +5116,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		if (_history->peer->isMonoforum()) {
 			result.text = tr::lng_action_created_monoforum(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_created_chat(
@@ -5116,7 +5125,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				fromLinkText(), // Link 1.
 				lt_title,
 				{ .text = qs(action.vtitle()) },
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5126,11 +5135,11 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		if (_history->peer->isMonoforum()) {
 			result.text = tr::lng_action_created_monoforum(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else if (isPost()) {
 			result.text = tr::lng_action_created_channel(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_created_chat(
@@ -5139,7 +5148,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				fromLinkText(), // Link 1.
 				lt_title,
 				{ .text = qs(action.vtitle()) },
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5149,14 +5158,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		if (isPost()) {
 			result.text = tr::lng_action_removed_photo_channel(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_removed_photo(
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5169,7 +5178,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			auto user = _history->owner().user(action.vuser_id().v);
 			result.links.push_back(fromLink());
@@ -5179,8 +5188,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				lt_from,
 				fromLinkText(), // Link 1.
 				lt_user,
-				Ui::Text::Link(user->name(), 2), // Link 2.
-				Ui::Text::WithEntities);
+				tr::link(user->name(), 2), // Link 2.
+				tr::marked);
 		}
 		return result;
 	};
@@ -5190,14 +5199,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		if (isPost()) {
 			result.text = tr::lng_action_changed_photo_channel(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_changed_photo(
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5209,7 +5218,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_title,
 				{ .text = (qs(action.vtitle())) },
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_changed_title(
@@ -5218,7 +5227,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				fromLinkText(), // Link 1.
 				lt_title,
 				{ .text = qs(action.vtitle()) },
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5247,7 +5256,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_amount,
 				AmountAndStarCurrency(data.vtotal_amount().v, qs(data.vcurrency())),
-				Ui::Text::WithEntities);
+				tr::marked);
 		return result;
 	};
 
@@ -5256,14 +5265,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		if (out()) {
 			result.text = tr::lng_action_you_took_screenshot(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_took_screenshot(
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5297,15 +5306,15 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				lt_app,
 				(url.isEmpty()
 					? TextWithEntities{ u"App"_q }
-					: Ui::Text::Link(info->title, url)),
-				Ui::Text::WithEntities);
+					: tr::link(info->title, url)),
+				tr::marked);
 		} else {
 			const auto domain = qs(action.vdomain().value_or_empty());
 			result.text = tr::lng_action_bot_allowed_from_domain(
 				tr::now,
 				lt_domain,
-				Ui::Text::Link(domain, u"http://"_q + domain),
-				Ui::Text::WithEntities);
+				tr::link(domain, u"http://"_q + domain),
+				tr::marked);
 		}
 		return result;
 	};
@@ -5343,10 +5352,10 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		result.text = tr::lng_action_secure_values_sent(
 			tr::now,
 			lt_user,
-			Ui::Text::Link(_history->peer->name(), QString()), // Link 1.
+			tr::link(_history->peer->name(), QString()), // Link 1.
 			lt_documents,
 			{ .text = documents.join(", ") },
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5357,7 +5366,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			tr::now,
 			lt_from,
 			fromLinkText(), // Link 1.
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5391,29 +5400,29 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					lt_distance,
 					{ .text = distance },
 					lt_user,
-					Ui::Text::Link(toPeer->name(), QString()), // Link 1.
-					Ui::Text::WithEntities);
+					tr::link(toPeer->name(), QString()), // Link 1.
+					tr::marked);
 			} else if (toId == selfId) {
 				result.links.push_back(fromPeer->createOpenLink());
 				return tr::lng_action_proximity_reached_you(
 					tr::now,
 					lt_from,
-					Ui::Text::Link(fromPeer->name(), QString()), // Link 1.
+					tr::link(fromPeer->name(), QString()), // Link 1.
 					lt_distance,
 					{ .text = distance },
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.links.push_back(fromPeer->createOpenLink());
 				result.links.push_back(toPeer->createOpenLink());
 				return tr::lng_action_proximity_reached(
 					tr::now,
 					lt_from,
-					Ui::Text::Link(fromPeer->name(), 1), // Link 1.
+					tr::link(fromPeer->name(), 1), // Link 1.
 					lt_distance,
 					{ .text = distance },
 					lt_user,
-					Ui::Text::Link(toPeer->name(), 2), // Link 2.
-					Ui::Text::WithEntities);
+					tr::link(toPeer->name(), 2), // Link 2.
+					tr::marked);
 			}
 		}();
 		return result;
@@ -5438,7 +5447,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					tr::now,
 					lt_duration,
 					{ .text = text },
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.links.push_back(fromLink());
 				result.text = tr::lng_action_group_call_finished_group(
@@ -5447,21 +5456,21 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					fromLinkText(), // Link 1.
 					lt_duration,
 					{ .text = text },
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 			return result;
 		}
 		if (_history->peer->isBroadcast()) {
 			result.text = tr::lng_action_group_call_started_channel(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_group_call_started_group(
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		return result;
 	};
@@ -5497,14 +5506,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						tr::now,
 						lt_duration,
 						{ .text = duration },
-						Ui::Text::WithEntities)
+						tr::marked)
 					: tr::lng_action_ttl_global(
 						tr::now,
 						lt_from,
-						Ui::Text::Link(peer->name(), 1), // Link 1.
+						tr::link(peer->name(), 1), // Link 1.
 						lt_duration,
 						{ .text = duration },
-						Ui::Text::WithEntities);
+						tr::marked);
 				return result;
 			}
 		}
@@ -5512,25 +5521,25 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			if (!period) {
 				result.text = tr::lng_action_ttl_removed_channel(
 					tr::now,
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = tr::lng_action_ttl_changed_channel(
 					tr::now,
 					lt_duration,
 					{ .text = duration },
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 		} else if (_from->isSelf()) {
 			if (!period) {
 				result.text = tr::lng_action_ttl_removed_you(
 					tr::now,
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = tr::lng_action_ttl_changed_you(
 					tr::now,
 					lt_duration,
 					{ .text = duration },
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 		} else {
 			result.links.push_back(fromLink());
@@ -5539,7 +5548,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					tr::now,
 					lt_from,
 					fromLinkText(), // Link 1.
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = tr::lng_action_ttl_changed(
 					tr::now,
@@ -5547,7 +5556,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					fromLinkText(), // Link 1.
 					lt_duration,
 					{ .text = duration },
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 		}
 		return result;
@@ -5567,7 +5576,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						tr::now,
 						lt_emoji,
 						{ .text = text },
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.links.push_back(fromLink());
 					result.text = tr::lng_action_theme_changed(
@@ -5576,25 +5585,25 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						fromLinkText(), // Link 1.
 						lt_emoji,
 						{ .text = text },
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			} else {
 				if (_from->isSelf()) {
 					result.text = tr::lng_action_you_theme_disabled(
 						tr::now,
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.links.push_back(fromLink());
 					result.text = tr::lng_action_theme_disabled(
 						tr::now,
 						lt_from,
 						fromLinkText(), // Link 1.
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}
 		}, [&](const MTPDchatThemeUniqueGift &data) {
 			data.vgift().match([&](const MTPDstarGiftUnique &data) {
-				const auto giftName = Ui::Text::Bold(qs(data.vtitle())
+				const auto giftName = tr::bold(qs(data.vtitle())
 					+ u" #"_q
 					+ QString::number(data.vnum().v));
 				if (_from->isSelf()) {
@@ -5602,7 +5611,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						tr::now,
 						lt_name,
 						giftName,
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.links.push_back(fromLink());
 					result.text = tr::lng_action_gift_theme_changed(
@@ -5611,7 +5620,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						fromLinkText(),
 						lt_name,
 						giftName,
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}, [](const MTPDstarGift &) {
 			});
@@ -5626,7 +5635,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			tr::now,
 			lt_from,
 			fromLinkText(), // Link 1.
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5636,7 +5645,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			tr::now,
 			lt_text,
 			{ .text = qs(action.vtext()) },
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5656,21 +5665,21 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_cost,
 				cost,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(peer->createOpenLink());
 			result.text = isSelf
 				? tr::lng_action_gift_sent(tr::now,
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
+					tr::link(peer->shortName(), 1), // Link 1.
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities);
+					tr::marked);
 		}
 		return result;
 	};
@@ -5683,13 +5692,13 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		result.text = tr::lng_action_topic_created(
 			tr::now,
 			lt_topic,
-			Ui::Text::Link(
+			tr::link(
 				Data::ForumTopicIconWithTitle(
 					id,
 					action.vicon_emoji_id().value_or_empty(),
 					qs(action.vtitle())),
 				topicUrl),
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -5718,7 +5727,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						{ linkText },
 						lt_emoji,
 						Data::SingleCustomEmoji(iconId),
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.links.push_back(fromLink());
 					result.text = tr::lng_action_topic_icon_removed(
@@ -5727,7 +5736,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						fromLinkText(), // Link 1.
 						lt_link,
 						{ linkText },
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}
 		} else {
@@ -5743,7 +5752,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					topicRootId(),
 					action.vicon_emoji_id().value_or_empty(),
 					qs(*action.vtitle())),
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 		if (result.text.empty()) {
 			result.text = { tr::lng_message_empty(tr::now) };
@@ -5775,8 +5784,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				: tr::lng_action_suggested_photo))(
 				tr::now,
 				lt_user,
-				Ui::Text::Link(name, 1), // Link 1.
-				Ui::Text::WithEntities);
+				tr::link(name, 1), // Link 1.
+				tr::marked);
 		return result;
 	};
 
@@ -5792,7 +5801,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			auto user = _history->owner().peer(id);
 			result.links.push_back(user->createOpenLink());
 
-			auto linkText = Ui::Text::Link(user->name(), 2 + i);
+			auto linkText = tr::link(user->name(), 2 + i);
 			if (i == 0) {
 				result.text = linkText;
 			} else if (i + 1 == count) {
@@ -5802,7 +5811,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					result.text,
 					lt_user,
 					linkText,
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = tr::lng_action_add_users_and_one(
 					tr::now,
@@ -5810,7 +5819,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					result.text,
 					lt_user,
 					linkText,
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 		}
 
@@ -5819,8 +5828,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			lt_chat,
 			result.text,
 			lt_bot,
-			Ui::Text::Link(history()->peer->name(), 1),
-			Ui::Text::WithEntities);
+			tr::link(history()->peer->name(), 1),
+			tr::marked);
 		return result;
 	};
 
@@ -5843,20 +5852,20 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				? tr::lng_action_set_wallpaper_both_me(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(Ui::Text::Bold(name), 1),
-					Ui::Text::WithEntities)
+					tr::link(tr::bold(name), 1),
+					tr::marked)
 				: (same
 					? tr::lng_action_set_same_wallpaper_me
 					: tr::lng_action_set_wallpaper_me)(
 						tr::now,
-						Ui::Text::WithEntities))
+						tr::marked))
 			: (same
 				? tr::lng_action_set_same_wallpaper
 				: tr::lng_action_set_wallpaper)(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(Ui::Text::Bold(name), 1),
-					Ui::Text::WithEntities);
+					tr::link(tr::bold(name), 1),
+					tr::marked);
 		return result;
 	};
 
@@ -5886,14 +5895,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				? tr::lng_action_gift_sent(tr::now,
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
+					tr::link(peer->shortName(), 1), // Link 1.
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities);
+					tr::marked);
 
 		}
 		return result;
@@ -5915,15 +5924,15 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						tr::now,
 						lt_count_decimal,
 						float64(credits),
-						Ui::Text::Bold),
-					Ui::Text::WithEntities)
+						tr::bold),
+					tr::marked)
 			: (_history->peer->isMegagroup()
 				? tr::lng_action_giveaway_started_group
 				: tr::lng_action_giveaway_started)(
 					tr::now,
 					lt_from,
 					fromLinkText(), // Link 1.
-					Ui::Text::WithEntities);
+					tr::marked);
 		return result;
 	};
 
@@ -5955,14 +5964,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		const auto isSelf = (_from->id == _from->session().userPeerId());
 		result.links.push_back(fromLink());
 		result.text = isSelf
-			? tr::lng_action_boost_apply_me(tr::now, Ui::Text::WithEntities)
+			? tr::lng_action_boost_apply_me(tr::now, tr::marked)
 			: tr::lng_action_boost_apply(
 				tr::now,
 				lt_count,
 				boosts,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		const auto channel = _history->peer->asChannel();
 		setCustomServiceLink(std::make_shared<LambdaClickHandler>([=](
 				ClickContext context) {
@@ -5986,10 +5995,10 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		result.text = tr::lng_action_payment_refunded(
 			tr::now,
 			lt_peer,
-			Ui::Text::Link(refund->peer->name(), 1), // Link 1.
+			tr::link(refund->peer->name(), 1), // Link 1.
 			lt_amount,
 			AmountAndStarCurrency(amount, currency),
-			Ui::Text::WithEntities);
+			tr::marked);
 		return result;
 	};
 
@@ -6008,21 +6017,21 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_cost,
 				cost,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(peer->createOpenLink());
 			result.text = isSelf
 				? tr::lng_action_gift_sent(tr::now,
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
+					tr::link(peer->shortName(), 1), // Link 1.
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities);
+					tr::marked);
 		}
 		return result;
 	};
@@ -6042,21 +6051,21 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				tr::now,
 				lt_cost,
 				cost,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(peer->createOpenLink());
 			result.text = isSelf
 				? tr::lng_action_gift_sent(tr::now,
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
+					tr::link(peer->shortName(), 1), // Link 1.
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities);
+					tr::marked);
 		}
 		return result;
 	};
@@ -6102,12 +6111,12 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			result.text = isSelf
 				? tr::lng_action_gift_unique_sent(
 					tr::now,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_unique_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
-					Ui::Text::WithEntities);
+					tr::link(peer->shortName(), 1), // Link 1.
+					tr::marked);
 			return result;
 		}
 		const auto cost = TextWithEntities{
@@ -6136,16 +6145,16 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						lt_cost,
 						cost,
 						lt_name,
-						Ui::Text::Link(channel->name(), 1),
-						Ui::Text::WithEntities);
+						tr::link(channel->name(), 1),
+						tr::marked);
 				} else {
 					result.text = tr::lng_action_gift_sent_self_channel(
 							tr::now,
 							lt_name,
-							Ui::Text::Link(channel->name(), 1),
+							tr::link(channel->name(), 1),
 							lt_cost,
 							cost,
-							Ui::Text::WithEntities);
+							tr::marked);
 				}
 			} else {
 				result.links.push_back(from->createOpenLink());
@@ -6156,20 +6165,20 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						lt_cost,
 						cost,
 						lt_name,
-						Ui::Text::Link(channel->name(), 2),
+						tr::link(channel->name(), 2),
 						lt_user,
-						Ui::Text::Link(from->shortName(), 1),
-						Ui::Text::WithEntities);
+						tr::link(from->shortName(), 1),
+						tr::marked);
 				} else {
 					result.text = tr::lng_action_gift_sent_channel(
 						tr::now,
 						lt_user,
-						Ui::Text::Link(from->shortName(), 1),
+						tr::link(from->shortName(), 1),
 						lt_name,
-						Ui::Text::Link(channel->name(), 2),
+						tr::link(channel->name(), 2),
 						lt_cost,
 						cost,
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}
 		} else if (anonymous || _history->peer->isSelf()) {
@@ -6197,7 +6206,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						tr::now,
 						lt_cost,
 						cost,
-						Ui::Text::WithEntities);
+						tr::marked);
 				} else {
 					result.links.push_back(from->createOpenLink());
 					result.text = tr::lng_action_gift_sent_upgrade_self_other(
@@ -6205,10 +6214,10 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						lt_cost,
 						cost,
 						lt_name,
-						Ui::Text::Link(peer->shortName(), 1),
+						tr::link(peer->shortName(), 1),
 						lt_user,
-						Ui::Text::Link(from->shortName(), 2),
-						Ui::Text::WithEntities);
+						tr::link(from->shortName(), 2),
+						tr::marked);
 				}
 			} else {
 				result.links.push_back(peer->createOpenLink());
@@ -6217,20 +6226,20 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					result.text = tr::lng_action_gift_sent_upgrade_other(
 						tr::now,
 						lt_from,
-						Ui::Text::Link(peer->shortName(), 1),
+						tr::link(peer->shortName(), 1),
 						lt_cost,
 						cost,
 						lt_user,
-						Ui::Text::Link(from->shortName(), 2),
-						Ui::Text::WithEntities);
+						tr::link(from->shortName(), 2),
+						tr::marked);
 				} else {
 					result.text = tr::lng_action_gift_sent_upgrade(
 						tr::now,
 						lt_from,
-						Ui::Text::Link(peer->shortName(), 1),
+						tr::link(peer->shortName(), 1),
 						lt_cost,
 						cost,
-						Ui::Text::WithEntities);
+						tr::marked);
 				}
 			}
 		} else {
@@ -6242,14 +6251,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					tr::now,
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_gift_received(
 					tr::now,
 					lt_user,
-					Ui::Text::Link(peer->shortName(), 1), // Link 1.
+					tr::link(peer->shortName(), 1), // Link 1.
 					lt_cost,
 					cost,
-					Ui::Text::WithEntities);
+					tr::marked);
 		}
 		return result;
 	};
@@ -6286,30 +6295,30 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					? tr::lng_action_gift_sent_channel(
 						tr::now,
 						lt_user,
-						Ui::Text::Link(from->shortName(), 1),
+						tr::link(from->shortName(), 1),
 						lt_name,
-						Ui::Text::Link(channel->name(), 2),
+						tr::link(channel->name(), 2),
 						lt_cost,
 						resaleCost,
-						Ui::Text::WithEntities)
+						tr::marked)
 					: (action.is_upgrade()
 						? tr::lng_action_gift_upgraded_channel
 						: tr::lng_action_gift_transferred_channel)(
 							tr::now,
 							lt_user,
-							Ui::Text::Link(from->shortName(), 1),
+							tr::link(from->shortName(), 1),
 							lt_channel,
-							Ui::Text::Link(channel->name(), 2),
-							Ui::Text::WithEntities);
+							tr::link(channel->name(), 2),
+							tr::marked);
 			} else {
 				result.text = resale
 					? tr::lng_action_gift_sent_self_channel(
 						tr::now,
 						lt_name,
-						Ui::Text::Link(channel->name(), 1),
+						tr::link(channel->name(), 1),
 						lt_cost,
 						resaleCost,
-						Ui::Text::WithEntities)
+						tr::marked)
 					: (from->isServiceUser()
 						? tr::lng_action_gift_transferred_unknown_channel
 						: action.is_upgrade()
@@ -6317,8 +6326,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						: tr::lng_action_gift_transferred_self_channel)(
 							tr::now,
 							lt_channel,
-							Ui::Text::Link(channel->name(), 1),
-							Ui::Text::WithEntities);
+							tr::link(channel->name(), 1),
+							tr::marked);
 			}
 			result.links.push_back(channel->createOpenLink());
 		} else {
@@ -6328,14 +6337,14 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					result.text = tr::lng_action_gift_upgraded_helped_self(
 						tr::now,
 						lt_user,
-						Ui::Text::Link(peer->shortName(), 1),
-						Ui::Text::WithEntities);
+						tr::link(peer->shortName(), 1),
+						tr::marked);
 				} else {
 					result.text = tr::lng_action_gift_upgraded_helped(
 						tr::now,
 						lt_user,
-						Ui::Text::Link(peer->shortName(), 1),
-						Ui::Text::WithEntities);
+						tr::link(peer->shortName(), 1),
+						tr::marked);
 				}
 			} else if (!from->isServiceUser() && !_history->peer->isSelf()) {
 				if (!resale || !isSelf) {
@@ -6347,28 +6356,28 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 							tr::now,
 							lt_cost,
 							resaleCost,
-							Ui::Text::WithEntities)
+							tr::marked)
 						: tr::lng_action_gift_received_sold(
 							tr::now,
 							lt_user,
-							Ui::Text::Link(peer->shortName(), 1), // Link 1.
+							tr::link(peer->shortName(), 1), // Link 1.
 							lt_cost,
 							resaleCost,
-							Ui::Text::WithEntities))
+							tr::marked))
 					: resale
 					? (isSelf
 						? tr::lng_action_gift_sent(
 							tr::now,
 							lt_cost,
 							resaleCost,
-							Ui::Text::WithEntities)
+							tr::marked)
 						: tr::lng_action_gift_received(
 							tr::now,
 							lt_user,
-							Ui::Text::Link(peer->shortName(), 1), // Link 1.
+							tr::link(peer->shortName(), 1), // Link 1.
 							lt_cost,
 							resaleCost,
-							Ui::Text::WithEntities))
+							tr::marked))
 					: (action.is_upgrade()
 						? (isSelf
 							? tr::lng_action_gift_upgraded_mine
@@ -6378,8 +6387,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 							: tr::lng_action_gift_transferred))(
 								tr::now,
 								lt_user,
-								Ui::Text::Link(from->shortName(), 1),
-								Ui::Text::WithEntities);
+								tr::link(from->shortName(), 1),
+								tr::marked);
 			} else if (action.is_assigned()) {
 				const auto gift = Api::FromTL(
 					&history()->session(),
@@ -6391,21 +6400,21 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 						? Data::UniqueGiftName(*gift->unique)
 						: QString(),
 					},
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = resale
 					? tr::lng_action_gift_self_bought(
 						tr::now,
 						lt_cost,
 						resaleCost,
-						Ui::Text::WithEntities)
+						tr::marked)
 					: (from->isServiceUser()
 						? tr::lng_action_gift_transferred_unknown
 						: action.is_upgrade()
 						? tr::lng_action_gift_upgraded_self
 						: tr::lng_action_gift_transferred_self)(
 							tr::now,
-							Ui::Text::WithEntities);
+							tr::marked);
 			}
 		}
 		return result;
@@ -6420,8 +6429,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				lt_count,
 				action.vstars().v,
 				lt_name,
-				Ui::Text::Link(_history->peer->shortName(), 1),
-				Ui::Text::WithEntities);
+				tr::link(_history->peer->shortName(), 1),
+				tr::marked);
 		} else {
 			result.links.push_back(_from->createOpenLink());
 			result.text = tr::lng_action_paid_message_refund(
@@ -6429,8 +6438,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				lt_count,
 				action.vstars().v,
 				lt_from,
-				Ui::Text::Link(_from->shortName(), 1),
-				Ui::Text::WithEntities);
+				tr::link(_from->shortName(), 1),
+				tr::marked);
 		}
 		return result;
 	};
@@ -6445,23 +6454,23 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 					tr::now,
 					lt_count,
 					stars,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: broadcastAllowed
 				? tr::lng_action_direct_messages_enabled(
 					tr::now,
-					Ui::Text::WithEntities)
+					tr::marked)
 				: tr::lng_action_direct_messages_disabled(
 					tr::now,
-					Ui::Text::WithEntities))
+					tr::marked))
 			: stars
 			? tr::lng_action_message_price_paid(
 				tr::now,
 				lt_count,
 				stars,
-				Ui::Text::WithEntities)
+				tr::marked)
 			: tr::lng_action_message_price_free(
 				tr::now,
-				Ui::Text::WithEntities);
+				tr::marked);
 		return result;
 	};
 
@@ -6492,8 +6501,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 				lt_count_decimal,
 				price.value(),
 				lt_from,
-				Ui::Text::Link(_from->shortName(), 1),
-				Ui::Text::WithEntities);
+				tr::link(_from->shortName(), 1),
+				tr::marked);
 		return result;
 	};
 
@@ -6522,8 +6531,8 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 			: tr::lng_action_suggested_birthday)(
 				tr::now,
 				lt_user,
-				Ui::Text::Link(name, 1), // Link 1.
-				Ui::Text::WithEntities);
+				tr::link(name, 1), // Link 1.
+				tr::marked);
 		return result;
 	};
 
@@ -6565,7 +6574,7 @@ void HistoryItem::setServiceMessageByAction(const MTPmessageAction &action) {
 		action.vgift().match([&](const MTPDstarGiftUnique &data) {
 			const auto amount = CreditsAmountFromTL(action.vprice());
 			const auto cost = tr::marked(PrepareCreditsAmountText(amount));
-			const auto giftName = Ui::Text::Bold(qs(data.vtitle())
+			const auto giftName = tr::bold(qs(data.vtitle())
 				+ u" #"_q
 				+ QString::number(data.vnum().v));
 			const auto expired = action.is_expired();
@@ -6828,7 +6837,7 @@ void HistoryItem::applyAction(const MTPMessageAction &action) {
 			? peerFromMTP(*data.vpeer())
 			: PeerId();
 		const auto upgradeMsgId = data.vupgrade_msg_id().value_or_empty();
-		const auto realGiftMsgId = data.vgift_msg_id().value_or_empty();
+		const auto giftMsgId = data.vgift_msg_id().value_or_empty();
 		const auto title = data.vgift().match([&](const MTPDstarGift &gift) {
 			return qs(gift.vtitle().value_or_empty());
 		}, [](const MTPDstarGiftUnique &) {
@@ -6842,6 +6851,18 @@ void HistoryItem::applyAction(const MTPMessageAction &action) {
 		}, [](const MTPDstarGiftUnique &) {
 			return 0;
 		});
+		const auto channel = (service && peerIsChannel(to))
+			? history()->owner().channel(peerToChannel(to)).get()
+			: nullptr;
+		const auto channelSavedId = channel
+			? data.vsaved_id().value_or_empty()
+			: uint64();
+		const auto realGiftMsgId = (peerIsUser(to) && data.vsaved_id())
+			? MsgId(data.vsaved_id().value_or_empty())
+			: upgradeMsgId
+			? upgradeMsgId
+			: giftMsgId;
+
 		using Fields = Data::GiftCode;
 		auto fields = Fields{
 			.message = (data.vmessage()
@@ -6855,17 +6876,15 @@ void HistoryItem::applyAction(const MTPMessageAction &action) {
 				? history()->owner().peer(
 					peerFromMTP(*data.vto_id())).get()
 				: nullptr,
-			.channel = ((service && peerIsChannel(to))
-				? history()->owner().channel(peerToChannel(to)).get()
-				: nullptr),
+			.channel = channel,
 			.channelFrom = ((service && from)
 				? history()->owner().peer(from).get()
 				: nullptr),
-			.channelSavedId = data.vsaved_id().value_or_empty(),
+			.channelSavedId = channelSavedId,
 			.giftPrepayUpgradeHash = qs(
 				data.vprepaid_upgrade_hash().value_or_empty()),
 			.giftTitle = title,
-			.realGiftMsgId = (upgradeMsgId ? upgradeMsgId : realGiftMsgId),
+			.realGiftMsgId = realGiftMsgId,
 			.starsConverted = int(data.vconvert_stars().value_or_empty()),
 			.starsUpgradedBySender = int(
 				data.vupgrade_stars().value_or_empty()),
@@ -6902,15 +6921,24 @@ void HistoryItem::applyAction(const MTPMessageAction &action) {
 		const auto to = data.vpeer()
 			? peerFromMTP(*data.vpeer())
 			: PeerId();
+		const auto channel = (service && peerIsChannel(to))
+			? history()->owner().channel(peerToChannel(to)).get()
+			: nullptr;
+		const auto channelSavedId = channel
+			? data.vsaved_id().value_or_empty()
+			: uint64();
+		const auto realGiftMsgId = (peerIsUser(to) && data.vsaved_id())
+			? MsgId(data.vsaved_id().value_or_empty())
+			: id;
+
 		using Fields = Data::GiftCode;
 		auto fields = Fields{
-			.channel = ((service && peerIsChannel(to))
-				? history()->owner().channel(peerToChannel(to)).get()
-				: nullptr),
+			.channel = channel,
 			.channelFrom = ((service && from)
 				? history()->owner().peer(from).get()
 				: nullptr),
-			.channelSavedId = data.vsaved_id().value_or_empty(),
+			.channelSavedId = channelSavedId,
+			.realGiftMsgId = realGiftMsgId,
 			.starsForDetailsRemove = int(
 				data.vdrop_original_details_stars().value_or_empty()),
 			.type = Data::GiftType::StarGift,
@@ -6985,14 +7013,14 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 		CallId linkCallId) {
 	auto chatText = tr::lng_action_invite_user_chat(
 		tr::now,
-		Ui::Text::WithEntities);
+		tr::marked);
 	auto result = PreparedServiceText();
 	result.links.push_back(fromLink());
 	auto linkIndex = 1;
 	if (linkCallId) {
 		const auto peer = _history->peer;
 		result.links.push_back(GroupCallClickHandler(peer, linkCallId));
-		chatText = Ui::Text::Link(chatText.text, ++linkIndex);
+		chatText = tr::link(chatText.text, ++linkIndex);
 	}
 	if (users.size() == 1) {
 		auto user = users[0];
@@ -7002,10 +7030,10 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 			lt_from,
 			fromLinkText(), // Link 1.
 			lt_user,
-			Ui::Text::Link(user->name(), ++linkIndex), // Link N.
+			tr::link(user->name(), ++linkIndex), // Link N.
 			lt_chat,
 			chatText,
-			Ui::Text::WithEntities);
+			tr::marked);
 	} else if (users.empty()) {
 		result.text = tr::lng_action_invite_user(
 			tr::now,
@@ -7015,13 +7043,13 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 			{ .text = u"somebody"_q },
 			lt_chat,
 			chatText,
-			Ui::Text::WithEntities);
+			tr::marked);
 	} else {
 		for (auto i = 0, l = int(users.size()); i != l; ++i) {
 			const auto user = users[i];
 			result.links.push_back(user->createOpenLink());
 
-			auto linkText = Ui::Text::Link(user->name(), ++linkIndex);
+			auto linkText = tr::link(user->name(), ++linkIndex);
 			if (i == 0) {
 				result.text = linkText;
 			} else if (i + 1 == l) {
@@ -7031,7 +7059,7 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 					result.text,
 					lt_user,
 					linkText,
-					Ui::Text::WithEntities);
+					tr::marked);
 			} else {
 				result.text = tr::lng_action_invite_users_and_one(
 					tr::now,
@@ -7039,7 +7067,7 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 					result.text,
 					lt_user,
 					linkText,
-					Ui::Text::WithEntities);
+					tr::marked);
 			}
 		}
 		result.text = tr::lng_action_invite_users_many(
@@ -7050,7 +7078,7 @@ PreparedServiceText HistoryItem::prepareInvitedToCallText(
 			result.text,
 			lt_chat,
 			chatText,
-			Ui::Text::WithEntities);
+			tr::marked);
 	}
 	return result;
 }
@@ -7094,7 +7122,7 @@ PreparedServiceText HistoryItem::preparePinnedText() {
 				original = Ui::Text::Mid(original, 0, cutAt).append(
 					Ui::kQEllipsis);
 			}
-			original = Ui::Text::Link(
+			original = tr::link(
 				Ui::Text::Filtered(
 					std::move(original),
 					{
@@ -7110,15 +7138,15 @@ PreparedServiceText HistoryItem::preparePinnedText() {
 				fromLinkText(), // Link 1.
 				lt_text,
 				st::wrap_rtl(original), // Link 2.
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.text = tr::lng_action_pinned_media(
 				tr::now,
 				lt_from,
 				fromLinkText(), // Link 1.
 				lt_media,
-				Ui::Text::Link(mediaText, 2), // Link 2.
-				Ui::Text::WithEntities);
+				tr::link(mediaText, 2), // Link 2.
+				tr::marked);
 		}
 	} else if (pinned && pinned->msgId) {
 		result.links.push_back(fromLink());
@@ -7128,8 +7156,8 @@ PreparedServiceText HistoryItem::preparePinnedText() {
 			lt_from,
 			fromLinkText(), // Link 1.
 			lt_media,
-			Ui::Text::Link(tr::lng_contacts_loading(tr::now), 2), // Link 2.
-			Ui::Text::WithEntities);
+			tr::link(tr::lng_contacts_loading(tr::now), 2), // Link 2.
+			tr::marked);
 	} else {
 		result.links.push_back(fromLink());
 		result.text = tr::lng_action_pinned_media(
@@ -7138,7 +7166,7 @@ PreparedServiceText HistoryItem::preparePinnedText() {
 			fromLinkText(), // Link 1.
 			lt_media,
 			{ .text = tr::lng_deleted_message(tr::now) },
-			Ui::Text::WithEntities);
+			tr::marked);
 	}
 	return result;
 }
@@ -7160,12 +7188,12 @@ PreparedServiceText HistoryItem::prepareGameScoreText() {
 							column,
 							gamescore->msg->fullId()));
 					auto titleText = game->title;
-					return Ui::Text::Link(titleText, QString());
+					return tr::link(titleText, QString());
 				}
 			}
-			return tr::lng_deleted_message(tr::now, Ui::Text::WithEntities);
+			return tr::lng_deleted_message(tr::now, tr::marked);
 		} else if (gamescore && gamescore->msgId) {
-			return tr::lng_contacts_loading(tr::now, Ui::Text::WithEntities);
+			return tr::lng_contacts_loading(tr::now, tr::marked);
 		}
 		return {};
 	};
@@ -7178,7 +7206,7 @@ PreparedServiceText HistoryItem::prepareGameScoreText() {
 				tr::now,
 				lt_count,
 				scoreNumber,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.text = tr::lng_action_game_you_scored(
 				tr::now,
@@ -7186,7 +7214,7 @@ PreparedServiceText HistoryItem::prepareGameScoreText() {
 				scoreNumber,
 				lt_game,
 				gameTitle,
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 	} else {
 		result.links.push_back(fromLink());
@@ -7198,7 +7226,7 @@ PreparedServiceText HistoryItem::prepareGameScoreText() {
 				scoreNumber,
 				lt_from,
 				fromLinkText(), // Link 1.
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.text = tr::lng_action_game_score(
 				tr::now,
@@ -7208,7 +7236,7 @@ PreparedServiceText HistoryItem::prepareGameScoreText() {
 				fromLinkText(), // Link 1.
 				lt_game,
 				gameTitle,
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 	}
 	return result;
@@ -7223,7 +7251,7 @@ PreparedServiceText HistoryItem::preparePaymentSentText() {
 		if (payment->msg) {
 			if (const auto media = payment->msg->media()) {
 				if (const auto invoice = media->invoice()) {
-					return Ui::Text::Link(invoice->title, QString());
+					return tr::link(invoice->title, QString());
 				}
 			}
 		}
@@ -7236,7 +7264,7 @@ PreparedServiceText HistoryItem::preparePaymentSentText() {
 				tr::now,
 				lt_amount,
 				payment->amount,
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.text = (payment->recurringInit
 				? tr::lng_action_payment_init_recurring
@@ -7246,7 +7274,7 @@ PreparedServiceText HistoryItem::preparePaymentSentText() {
 					payment->amount,
 					lt_user,
 					{ .text = _history->peer->name() },
-					Ui::Text::WithEntities);
+					tr::marked);
 		}
 	} else {
 		result.text = (payment->recurringInit
@@ -7259,7 +7287,7 @@ PreparedServiceText HistoryItem::preparePaymentSentText() {
 				{ .text = _history->peer->name() },
 				lt_invoice,
 				invoiceTitle,
-				Ui::Text::WithEntities);
+				tr::marked);
 		if (payment->msg) {
 			result.links.push_back(payment->lnk);
 		}
@@ -7282,10 +7310,10 @@ PreparedServiceText HistoryItem::prepareStoryMentionText() {
 		tr::now,
 		lt_user,
 		Ui::Text::Wrapped(
-			Ui::Text::Bold(peer->shortName()),
+			tr::bold(peer->shortName()),
 			EntityType::CustomUrl,
 			u"internal:index"_q + QChar(1)),
-		Ui::Text::WithEntities);
+		tr::marked);
 	return result;
 }
 
@@ -7307,7 +7335,7 @@ PreparedServiceText HistoryItem::prepareCallScheduledText(
 				tr::now,
 				lt_date,
 				{ .text = date },
-				Ui::Text::WithEntities);
+				tr::marked);
 		} else {
 			result.links.push_back(fromLink());
 			result.text = tr::lng_action_group_call_scheduled_group(
@@ -7316,7 +7344,7 @@ PreparedServiceText HistoryItem::prepareCallScheduledText(
 				fromLinkText(), // Link 1.
 				lt_date,
 				{ .text = date },
-				Ui::Text::WithEntities);
+				tr::marked);
 		}
 	};
 	const auto time = QLocale().toString(
@@ -7348,7 +7376,7 @@ PreparedServiceText HistoryItem::prepareCallScheduledText(
 	if (nextIn) {
 		call->lifetime = base::timer_once(
 			(nextIn + 2) * crl::time(1000)
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			updateServiceText(prepareCallScheduledText(scheduleDate));
 		});
 	}
@@ -7364,7 +7392,7 @@ PreparedServiceText HistoryItem::composeTodoIncompleted(
 				tr::now,
 				lt_tasks,
 				tasks,
-				Ui::Text::WithEntities),
+				tr::marked),
 		};
 	}
 	return {
@@ -7374,7 +7402,7 @@ PreparedServiceText HistoryItem::composeTodoIncompleted(
 			fromLinkText(),
 			lt_tasks,
 			tasks,
-			Ui::Text::WithEntities),
+			tr::marked),
 		.links = { fromLink() },
 	};
 }
@@ -7388,7 +7416,7 @@ PreparedServiceText HistoryItem::composeTodoCompleted(
 				tr::now,
 				lt_tasks,
 				tasks,
-				Ui::Text::WithEntities),
+				tr::marked),
 		};
 	}
 	return {
@@ -7398,7 +7426,7 @@ PreparedServiceText HistoryItem::composeTodoCompleted(
 			fromLinkText(),
 			lt_tasks,
 			tasks,
-			Ui::Text::WithEntities),
+			tr::marked),
 		.links = { fromLink() },
 	};
 }
@@ -7425,7 +7453,7 @@ PreparedServiceText HistoryItem::prepareTodoAppendTasksText() {
 				tr::now,
 				lt_tasks,
 				tasks,
-				Ui::Text::WithEntities),
+				tr::marked),
 		};
 	}
 	return {
@@ -7435,14 +7463,14 @@ PreparedServiceText HistoryItem::prepareTodoAppendTasksText() {
 			fromLinkText(),
 			lt_tasks,
 			tasks,
-			Ui::Text::WithEntities),
+			tr::marked),
 		.links = { fromLink() },
 	};
 	return result;
 }
 
 TextWithEntities HistoryItem::fromLinkText() const {
-	return Ui::Text::Link(st::wrap_rtl(_from->name()), 1);
+	return tr::link(st::wrap_rtl(_from->name()), 1);
 }
 
 ClickHandlerPtr HistoryItem::fromLink() const {

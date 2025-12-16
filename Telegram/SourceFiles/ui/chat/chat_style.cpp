@@ -202,7 +202,7 @@ ChatStyle::ChatStyle(rpl::producer<ColorIndicesCompressed> colorIndices) {
 	if (colorIndices) {
 		_colorIndicesLifetime = std::move(
 			colorIndices
-		) | rpl::start_with_next([=](ColorIndicesCompressed &&indices) {
+		) | rpl::on_next([=](ColorIndicesCompressed &&indices) {
 			_colorIndices = std::move(indices);
 		});
 	}
@@ -629,7 +629,7 @@ void ChatStyle::applyCustomPalette(const style::palette *palette) {
 		_defaultPaletteChangeLifetime.destroy();
 	} else {
 		style::PaletteChanged(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			assignPalette(style::main_palette::get());
 		}, _defaultPaletteChangeLifetime);
 	}

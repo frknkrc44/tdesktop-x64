@@ -53,7 +53,7 @@ GroupMembersWidget::GroupMembersWidget(
 		UpdateFlag::Admins
 		| UpdateFlag::Members
 		| UpdateFlag::OnlineStatus
-	) | rpl::start_with_next([=](const Data::PeerUpdate &update) {
+	) | rpl::on_next([=](const Data::PeerUpdate &update) {
 		notifyPeerUpdated(update);
 	}, lifetime());
 

@@ -55,7 +55,7 @@ void TranslateTracker::setup() {
 
 	const auto channel = peer->asChannel();
 	auto autoTranslationValue = (channel
-		? (channel->flagsValue() | rpl::type_erased())
+		? (channel->flagsValue() | rpl::type_erased)
 		: rpl::single(Data::Flags<ChannelDataFlags>::Change({}, {}))
 		) | rpl::map([=](Data::Flags<ChannelDataFlags>::Change data) {
 		return (data.value & ChannelDataFlag::AutoTranslation);
@@ -69,7 +69,7 @@ void TranslateTracker::setup() {
 		std::move(autoTranslationValue),
 		rpl::single(useGTApi),
 		_1 && (_2 || _3 || _4));
-	_trackingLanguage.value() | rpl::start_with_next([=](bool tracking) {
+	_trackingLanguage.value() | rpl::on_next([=](bool tracking) {
 		_trackingLifetime.destroy();
 		if (tracking) {
 			recognizeCollected();
@@ -357,7 +357,7 @@ void TranslateTracker::recognizeCollected() {
 
 void TranslateTracker::trackSkipLanguages() {
 	Core::App().settings().skipTranslationLanguagesValue(
-	) | rpl::start_with_next([=](const std::vector<LanguageId> &skip) {
+	) | rpl::on_next([=](const std::vector<LanguageId> &skip) {
 		checkRecognized(skip);
 	}, _trackingLifetime);
 }
