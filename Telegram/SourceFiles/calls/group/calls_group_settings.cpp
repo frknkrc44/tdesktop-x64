@@ -379,7 +379,7 @@ void SettingsBox(
 		))->toggleOn(rpl::single(
 			settings.groupCallNoiseSuppression()
 		))->toggledChanges(
-		) | rpl::start_with_next([=](bool enabled) {
+		) | rpl::on_next([=](bool enabled) {
 			Core::App().settings().setGroupCallNoiseSuppression(enabled);
 			call->setNoiseSuppression(enabled);
 			Core::App().saveSettingsDelayed();
@@ -394,7 +394,7 @@ void SettingsBox(
 	)->toggledChanges(
 	) | rpl::filter([=](bool toggled) {
 		return (toggled != GetEnhancedBool("show_scheduled_button"));
-	}) | rpl::start_with_next([=](bool toggled) {
+	}) | rpl::on_next([=](bool toggled) {
 		// call->setStereoMode(toggled);
 		if (call->muted() == MuteState::Active) {
 			call->setMuted(MuteState::Muted);
@@ -477,8 +477,8 @@ void SettingsBox(
 									? tr::lng_group_call_mac_input()
 									: tr::lng_group_call_mac_accessibility())
 							) | rpl::map([](QString a, QString b) {
-								auto result = Ui::Text::RichLangValue(a);
-								result.append("\n\n").append(Ui::Text::RichLangValue(b));
+								auto result = tr::rich(a);
+								result.append("\n\n").append(tr::rich(b));
 								return result;
 							}),
 							st::groupCallBoxLabel),
@@ -502,7 +502,7 @@ void SettingsBox(
 							kCheckAccessibilityInterval
 						) | rpl::filter([] {
 							return base::GlobalShortcutsAllowed();
-						}) | rpl::start_with_next([=] {
+						}) | rpl::on_next([=] {
 							box->closeBox();
 						}, box->lifetime());
 					}
@@ -599,7 +599,7 @@ void SettingsBox(
 				settings.groupCallPushToTalk(),
 				anim::type::instant);
 			pushToTalk->toggledChanges(
-			) | rpl::start_with_next([=](bool toggled) {
+			) | rpl::on_next([=](bool toggled) {
 				if (!toggled) {
 					stopRecording();
 				} else if (!ensureManager()) {
@@ -821,12 +821,12 @@ void SettingsBox(
 		});
 
 		volumeItem->toggleMuteLocallyRequests(
-		) | rpl::start_with_next([=](bool muted) {
+		) | rpl::on_next([=](bool muted) {
 			toggleMute(muted, true);
 		}, volumeItem->lifetime());
 
 		volumeItem->changeVolumeLocallyRequests(
-		) | rpl::start_with_next([=](int volume) {
+		) | rpl::on_next([=](int volume) {
 			changeVolume(volume, true);
 		}, volumeItem->lifetime());
 	}
@@ -869,7 +869,7 @@ void SettingsBox(
 
 	box->setTitle(tr::lng_group_call_settings_title());
 	box->boxClosing(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (canChangeJoinMuted
 			&& muteJoined
 			&& muteJoined->toggled() != joinMuted) {

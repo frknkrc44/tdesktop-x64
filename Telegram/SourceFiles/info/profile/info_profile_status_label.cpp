@@ -135,7 +135,7 @@ void StatusLabel::refresh() {
 			if (!channel->membersCountKnown()) {
 				auto result = ChannelTypeText(channel);
 				return hasMembersLink
-					? Ui::Text::Link(result)
+					? tr::link(result)
 					: TextWithEntities{ .text = result };
 			}
 			const auto onlineCount = _onlineCount;
@@ -145,7 +145,7 @@ void StatusLabel::refresh() {
 				onlineCount,
 				channel->isMegagroup());
 			return hasMembersLink
-				? Ui::Text::Link(result)
+				? tr::link(result)
 				: TextWithEntities{ .text = result };
 		}
 		return tr::lng_chat_status_unaccessible(tr::now, WithEntities);

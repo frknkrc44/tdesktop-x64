@@ -314,7 +314,7 @@ Document::Document(
 		const auto fullId = _realParent->fullId();
 		if (_parent->delegate()->elementContext() == Context::TTLViewer) {
 			auto lifetime = std::make_shared<rpl::lifetime>();
-			TTLVoiceStops(fullId) | rpl::start_with_next([=]() mutable {
+			TTLVoiceStops(fullId) | rpl::on_next([=]() mutable {
 				if (lifetime) {
 					base::take(lifetime)->destroy();
 				}
@@ -327,7 +327,7 @@ Document::Document(
 				_openl = nullptr;
 
 				auto lifetime = std::make_shared<rpl::lifetime>();
-				TTLVoiceStops(fullId) | rpl::start_with_next([=]() mutable {
+				TTLVoiceStops(fullId) | rpl::on_next([=]() mutable {
 					if (lifetime) {
 						base::take(lifetime)->destroy();
 					}
@@ -455,9 +455,9 @@ QSize Document::countOptimalSize() {
 			auto text = (entry.requestId || !entry.shown)
 				? TextWithEntities()
 				: entry.toolong
-				? Ui::Text::Italic(tr::lng_audio_transcribe_long(tr::now))
+				? tr::italic(tr::lng_audio_transcribe_long(tr::now))
 				: entry.failed
-				? Ui::Text::Italic(tr::lng_attach_failed(tr::now))
+				? tr::italic(tr::lng_attach_failed(tr::now))
 				: TextWithEntities{ entry.result }.append(
 					pending
 						? Ui::Text::LottieEmoji(descriptor)
