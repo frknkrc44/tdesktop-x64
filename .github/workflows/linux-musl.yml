@@ -64,11 +64,6 @@ jobs:
           tar -xzf ${{ env.TDLIB_COMMIT }}.tar.gz
           mv td-${{ env.TDLIB_COMMIT }} td
 
-      - name: Apply UI Patch
-        run: |
-          wget https://github.com/alpinelinux/aports/raw/master/community/telegram-desktop/small-sizes.patch
-          patch -p1 < small-sizes.patch || echo "Patch skip"
-
       - name: Build Telegram Desktop
         run: |
           export LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768"
@@ -79,8 +74,8 @@ jobs:
 
           cmake -B out/${{ env.BUILD_TYPE }} -G Ninja . \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-            -DCMAKE_C_FLAGS_RELEASE='-O3 -s' \
-            -DCMAKE_CXX_FLAGS_RELEASE='-O3 -s' \
+            -DCMAKE_C_FLAGS_RELEASE='-O3 -s -march=x86-64 -mtune=generic' \
+            -DCMAKE_CXX_FLAGS_RELEASE='-O3 -s -march=x86-64 -mtune=generic' \
             -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF \
             -DTDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
             -DTDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
