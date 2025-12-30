@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           apk update
-          apk add alpine-sdk sudo cmake samurai meson python3 git bash \
+          apk add alpine-sdk cmake samurai meson python3 git bash \
                   ada-dev extra-cmake-modules qt6-qt5compat-dev \
                   qt6-qtsvg-dev qt6-qtwayland-dev tg_owt-dev gperf \
                   opus-dev alsa-lib-dev pulseaudio-dev boost-dev \
@@ -57,40 +57,32 @@ jobs:
         with:
           tool-cache: true
 
-      - name: Setup Build User
-        run: |
-          adduser -G abuild -D builder
-          echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-          chown -R builder:builder .
-
       - name: Apply UI Patch
         run: |
-          sudo -u builder wget https://github.com/alpinelinux/aports/raw/master/community/telegram-desktop/small-sizes.patch
-          sudo -u builder patch -p1 < small-sizes.patch || echo "Patch skip"
+          wget https://github.com/alpinelinux/aports/raw/master/community/telegram-desktop/small-sizes.patch
+          patch -p1 < small-sizes.patch || echo "Patch skip"
 
       - name: Build Telegram Desktop
         run: |
-          sudo -u builder bash -c "
-            export LDFLAGS='\$LDFLAGS -Wl,-z,stack-size=1024768'
-            
-            cmake -S td -B td/build -DCMAKE_BUILD_TYPE=Release \
-                  -DCMAKE_INSTALL_PREFIX='td/install' -DTD_E2E_ONLY=ON
-            cmake --build td/build --target install
+          export LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768"
+          
+          cmake -S td -B td/build -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX="$PWD/td/install" -DTD_E2E_ONLY=ON
+          cmake --build td/build --target install
 
-            cmake -B out/${{ env.BUILD_TYPE }} -G Ninja . \
-              -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-              -DCMAKE_C_FLAGS_RELEASE='-O3 -s' \
-              -DCMAKE_CXX_FLAGS_RELEASE='-O3 -s' \
-              -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF \
-              -DTDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
-              -DTDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
-              -DTDESKTOP_API_TEST=OFF \
-              -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
-              -DDESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
-              -DDESKTOP_APP_USE_PACKAGED=ON
-            
-            cmake --build out/${{ env.BUILD_TYPE }}
-          "
+          cmake -B out/${{ env.BUILD_TYPE }} -G Ninja . \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_C_FLAGS_RELEASE='-O3 -s' \
+            -DCMAKE_CXX_FLAGS_RELEASE='-O3 -s' \
+            -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF \
+            -DTDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
+            -DTDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
+            -DTDESKTOP_API_TEST=OFF \
+            -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
+            -DDESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
+            -DDESKTOP_APP_USE_PACKAGED=ON
+          
+          cmake --build out/${{ env.BUILD_TYPE }}
 
       - name: Strip binaries
         run: |
@@ -98,10 +90,11 @@ jobs:
 
       - name: Verify build
         run: |
-          filePath="out/${{ env.BUILD_TYPE }}/bin/telegram-desktop"
+          filePath=$(find out/${{ env.BUILD_TYPE }} -name Telegram -type f)
           if [ -f "$filePath" ]; then
             echo "Build successfully done!"
             ls -lh "$filePath"
+            echo "BIN_PATH=$filePath" >> $GITHUB_ENV
           else
             echo "Build error"
             exit 1
@@ -112,4 +105,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-Alpine-Musl
-          path: out/${{ env.BUILD_TYPE }}/bin/telegram-desktop
+          path: ${{ env.BIN_PATH }}
