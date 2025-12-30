@@ -12,40 +12,45 @@ jobs:
     name: Alpine Native Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your fork
+      - name: Get repository name
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          path: tdesktop-source
+          path: ${{ env.REPO_NAME }}
+          fetch-depth: 0
 
-      - name: Set up pmbootstrap
+      - name: Install pmbootstrap
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip openssl
-          pip3 install --break-system-packages git+https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+          sudo apt-get install -y python3-pip python3-virtualenv openssl
+          pip3 install --break-system-packages https://gitlab.postmarketos.org/postmarketOS/pmbootstrap/-/archive/master.tar.gz
           
-          mkdir -p /home/runner/pmbootstrap
-          pmbootstrap init --path /home/runner/pmbootstrap --mirror-alpine http://dl-cdn.alpinelinux.org/alpine/ --as-root <<EOF
-          edge
-          alpine
-          x86_64
-          y
-          EOF
+          yes '' | pmbootstrap init || true
 
-      - name: Prepare Aport with Custom Flags
+      - name: Prepare Aport
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
+          pmbootstrap pull
           pmbootstrap aportgen --fork-alpine telegram-desktop
-          APORT_DIR="/home/runner/pmbootstrap/cache_git/pmaports/temp/telegram-desktop"
           
-          cd tdesktop-source
-          tar -czf $APORT_DIR/tdesktop-fork.tar.gz .
-          cd ..
-
+          mkdir -p pmaports/temp
+          ln -s ~/.local/var/pmbootstrap/cache_git/pmaports pmaports_link
+          cp -r ~/.local/var/pmbootstrap/cache_git/pmaports/main/telegram-desktop pmaports/temp/telegram-custom
+          
+          APORT_DIR="pmaports/temp/telegram-custom"
+          
+          pushd "$REPO_NAME"
+          pkgver="$(grep ^AppVersionStrSmall Telegram/build/version | grep -o '[0-9].*')"
+          popd
+          
           sed -i "s|pkgname=telegram-desktop|pkgname=telegram-custom|g" $APORT_DIR/APKBUILD
-          sed -i "s|source=.*|source=\"tdesktop-fork.tar.gz\"|g" $APORT_DIR/APKBUILD
+          sed -i "s|pkgver=.*|pkgver=$pkgver|g" $APORT_DIR/APKBUILD
+          sed -i "s|source=.*|source=\"telegram-custom.tar.gz\"|g" $APORT_DIR/APKBUILD
           
           sed -i "/-DCMAKE_BUILD_TYPE=Release/a \
             -DTDESKTOP_API_ID=$API_ID \
@@ -55,19 +60,21 @@ jobs:
             -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
             -DTDESKTOP_API_TEST=OFF \
             -DDESKTOP_APP_DISABLE_CRASH_REPORTS=OFF" $APORT_DIR/APKBUILD
+          
+          tar -czf $APORT_DIR/telegram-custom.tar.gz "$REPO_NAME"
 
-      - name: Build Native Package
+      - name: Build APK
         run: |
-          pmbootstrap checksum telegram-desktop
-          pmbootstrap build --arch x86_64 telegram-desktop
+          pmbootstrap checksum telegram-custom
+          pmbootstrap build --arch x86_64 telegram-custom
 
-      - name: Export APK
+      - name: Export Artifacts
         run: |
-          mkdir -p final_apk
-          find /home/runner/pmbootstrap/packages -name "*.apk" -exec cp {} final_apk/ \;
+          mkdir -p output
+          find ~/.local/var/pmbootstrap/packages -name "*.apk" -exec cp {} output/ \;
 
-      - name: Upload Native APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Telegram-Musl-Native
-          path: final_apk/
+          path: output/
