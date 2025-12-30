@@ -27,6 +27,7 @@ jobs:
     env:
       UPLOAD_ARTIFACT: "true"
       BUILD_TYPE: Release
+      TDLIB_COMMIT: 369ee922b45bfa7e8da357e4d62e93925862d86d
     
     container: 
       image: alpine:latest
@@ -57,6 +58,12 @@ jobs:
         with:
           tool-cache: true
 
+      - name: Fetch TDLib
+        run: |
+          wget https://github.com/tdlib/td/archive/${{ env.TDLIB_COMMIT }}.tar.gz
+          tar -xzf ${{ env.TDLIB_COMMIT }}.tar.gz
+          mv td-${{ env.TDLIB_COMMIT }} td
+
       - name: Apply UI Patch
         run: |
           wget https://github.com/alpinelinux/aports/raw/master/community/telegram-desktop/small-sizes.patch
@@ -80,7 +87,8 @@ jobs:
             -DTDESKTOP_API_TEST=OFF \
             -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
             -DDESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
-            -DDESKTOP_APP_USE_PACKAGED=ON
+            -DDESKTOP_APP_USE_PACKAGED=ON \
+            -Dtde2e_DIR="$PWD/td/install/lib/cmake/tde2e"
           
           cmake --build out/${{ env.BUILD_TYPE }}
 
@@ -91,12 +99,14 @@ jobs:
       - name: Verify build
         run: |
           filePath=$(find out/${{ env.BUILD_TYPE }} -name Telegram -type f)
+          if [ -z "$filePath" ]; then filePath=$(find out/${{ env.BUILD_TYPE }} -name telegram-desktop -type f); fi
+          
           if [ -f "$filePath" ]; then
             echo "Build successfully done!"
             ls -lh "$filePath"
             echo "BIN_PATH=$filePath" >> $GITHUB_ENV
           else
-            echo "Build error"
+            echo "Build error: binary not found"
             exit 1
           fi
 
