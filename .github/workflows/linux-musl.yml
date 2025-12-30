@@ -1,0 +1,67 @@
+name: Build Telegram Musl Native (Alpine)
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - ".github/**"
+  workflow_dispatch:
+
+jobs:
+  alpine-build:
+    name: Alpine Native Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your fork
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: tdesktop-source
+
+      - name: Set up pmbootstrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip openssl
+          pip3 install --break-system-packages git+https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+          pmbootstrap init --arch x86_64 --distro alpine --mirror-alpine http://dl-cdn.alpinelinux.org/alpine/ --work /home/runner/pmbootstrap
+
+      - name: Prepare Aport with Custom Flags
+        env:
+          API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          pmbootstrap aportgen --fork-alpine telegram-desktop
+          APORT_DIR="/home/runner/pmbootstrap/cache_git/pmaports/temp/telegram-desktop"
+          
+          cd tdesktop-source
+          tar -czf $APORT_DIR/tdesktop-fork.tar.gz .
+          cd ..
+
+          sed -i "s|pkgname=telegram-desktop|pkgname=telegram-custom|g" $APORT_DIR/APKBUILD
+          sed -i "s|source=.*|source=\"tdesktop-fork.tar.gz\"|g" $APORT_DIR/APKBUILD
+          
+          # Inyección de tus flags personalizadas y API Keys en el APKBUILD
+          sed -i "/-DCMAKE_BUILD_TYPE=Release/a \
+            -DTDESKTOP_API_ID=$API_ID \
+            -DTDESKTOP_API_HASH=$API_HASH \
+            -DCMAKE_C_FLAGS_RELEASE=\"-O3 -s\" \
+            -DCMAKE_CXX_FLAGS_RELEASE=\"-O3 -s\" \
+            -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
+            -DTDESKTOP_API_TEST=OFF \
+            -DDESKTOP_APP_DISABLE_CRASH_REPORTS=OFF" $APORT_DIR/APKBUILD
+
+      - name: Build Native Package
+        run: |
+          pmbootstrap checksum telegram-desktop
+          pmbootstrap build --arch x86_64 telegram-desktop
+
+      - name: Export APK
+        run: |
+          mkdir -p final_apk
+          find /home/runner/pmbootstrap/packages -name "*.apk" -exec cp {} final_apk/ \;
+
+      - name: Upload Native APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Telegram-Musl-Native
+          path: final_apk/
