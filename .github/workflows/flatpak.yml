@@ -1,0 +1,89 @@
+name: Flatpak Packager
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Linux Build"]
+    types:
+      - completed
+
+jobs:
+  flatpak:
+    name: Package Latest Binary to Flatpak
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Download Latest Binary Artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: linux.yml
+          name: Telegram-Desktop
+          repo: nubesurrealista/tdesktop-x64
+          latest: true
+
+      - name: Create Flatpak Manifest
+        run: |
+          cat <<EOF > org.telegram.nube.yml
+          app-id: org.telegram.nube
+          runtime: org.gnome.Platform
+          runtime-version: '47'
+          sdk: org.gnome.Sdk
+          command: Telegram
+          finish-args:
+            - --share=ipc
+            - --share=network
+            - --socket=wayland
+            - --socket=fallback-x11
+            - --socket=pulseaudio
+            - --device=all
+            - --talk-name=org.freedesktop.Notifications
+            - --talk-name=org.gnome.Mutter.IdleMonitor
+            - --talk-name=org.kde.StatusNotifierWatcher
+            - --talk-name=com.canonical.AppMenu.Registrar
+            - --talk-name=com.canonical.indicator.application
+            - --talk-name=org.ayatana.indicator.application
+            - --talk-name=org.sigxcpu.Feedback
+            - --filesystem=home
+            - --unset-env=QT_PLUGIN_PATH
+          modules:
+            - name: telegram-installer
+              buildsystem: simple
+              build-commands:
+                - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/512x512/apps/
+                - cp Telegram /app/bin/Telegram
+                - chmod +x /app/bin/Telegram
+                - |
+                  cat <<EOT > /app/share/applications/org.telegram.nube.desktop
+                  [Desktop Entry]
+                  Version=1.0
+                  Type=Application
+                  Name=Telegram Nube
+                  Exec=Telegram -- %u
+                  Icon=org.telegram.nube
+                  Categories=Network;InstantMessaging;Qt;
+                  Terminal=false
+                  MimeType=x-scheme-handler/tg;
+                  EOT
+                - curl -L https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg -o /app/share/icons/hicolor/512x512/apps/org.telegram.nube.svg
+              sources:
+                - type: file
+                  path: Telegram
+          EOF
+
+      - name: Build Flatpak Bundle
+        run: |
+          flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir org.telegram.nube.yml
+          flatpak build-bundle repo Telegram-Nube.flatpak org.telegram.nube
+
+      - name: Upload Final Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: Telegram-Nube-Flatpak
+          path: Telegram-Nube.flatpak
