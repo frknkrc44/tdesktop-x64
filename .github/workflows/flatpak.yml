@@ -2,11 +2,16 @@ name: Flatpak Packager
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Linux Build"]
+    types:
+      - completed
 
 jobs:
   flatpak:
-    name: Package Telegram Nube
+    name: Package 64Gram
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Setup Build Environment
         run: |
@@ -28,13 +33,15 @@ jobs:
           curl -L https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg -o icon.svg
           cat <<EOT > org.telegram.nube.desktop
           [Desktop Entry]
-          Version=1.0
-          Type=Application
-          Name=Telegram Nube
+          Name=64Gram
+          Comment=Fork de TG Desktop
           Exec=Telegram -- %u
           Icon=org.telegram.nube
-          Categories=Network;InstantMessaging;Qt;
           Terminal=false
+          Type=Application
+          Categories=Network;InstantMessaging;
+          StartupWMClass=Telegram
+          GenericName=Cliente no oficial basado en tg Desktop
           MimeType=x-scheme-handler/tg;
           EOT
 
@@ -57,7 +64,6 @@ jobs:
             - --talk-name=org.gnome.Mutter.IdleMonitor
             - --talk-name=org.kde.StatusNotifierWatcher
             - --talk-name=com.canonical.AppMenu.Registrar
-            - --talk-name=com.canonical.indicator.application
             - --talk-name=org.sigxcpu.Feedback
             - --filesystem=home
             - --unset-env=QT_PLUGIN_PATH
@@ -82,10 +88,10 @@ jobs:
       - name: Build Flatpak Bundle
         run: |
           flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir org.telegram.nube.yml
-          flatpak build-bundle repo Telegram-Nube.flatpak org.telegram.nube
+          flatpak build-bundle repo 64Gram.flatpak org.telegram.nube
 
       - name: Upload Final Flatpak
         uses: actions/upload-artifact@v4
         with:
-          name: Telegram-Nube-Flatpak
-          path: Telegram-Nube.flatpak
+          name: 64Gram-Flatpak
+          path: 64Gram.flatpak
