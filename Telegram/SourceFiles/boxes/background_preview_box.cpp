@@ -668,7 +668,7 @@ void BackgroundPreviewBox::setExistingForPeer(
 			| (_fromMessageId ? Flag() : Flag::f_wallpaper)
 			| (both ? Flag::f_for_both : Flag())
 			| Flag::f_settings),
-		_forPeer->input,
+		_forPeer->input(),
 		paper.mtpInput(&_controller->session()),
 		paper.mtpSettings(),
 		MTP_int(_fromMessageId.msg)
@@ -958,6 +958,7 @@ void BackgroundPreviewBox::paintTexts(Painter &p, crl::time ms) {
 	const auto height2 = _text2->height();
 	auto context = _controller->defaultChatTheme()->preparePaintContext(
 		_chatStyle.get(),
+		rect(),
 		rect(),
 		rect(),
 		_controller->isGifPausedAtLeastFor(Window::GifPauseReason::Layer));

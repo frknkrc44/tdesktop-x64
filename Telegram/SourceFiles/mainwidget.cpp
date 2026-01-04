@@ -429,7 +429,11 @@ MainWidget::MainWidget(
 	session().data().stickers().notifySavedGifsUpdated();
 }
 
-MainWidget::~MainWidget() = default;
+MainWidget::~MainWidget() {
+	if (_controller->activeChatCurrent()) {
+		session().api().saveCurrentDraftToCloud();
+	}
+}
 
 Main::Session &MainWidget::session() const {
 	return _controller->session();
@@ -2892,7 +2896,7 @@ int MainWidget::backgroundFromY() const {
 
 bool MainWidget::contentOverlapped(const QRect &globalRect) {
 	return _history->contentOverlapped(globalRect)
-		|| _playerPlaylist->overlaps(globalRect);
+		/*|| _playerPlaylist->overlaps(globalRect)*/;
 }
 
 void MainWidget::activate() {

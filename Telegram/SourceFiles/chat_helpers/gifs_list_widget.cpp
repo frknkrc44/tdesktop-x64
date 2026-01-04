@@ -518,7 +518,8 @@ void GifsListWidget::selectInlineResult(
 			|| (media && media->image(PhotoSize::Large))) {
 			_photoChosen.fire({
 				.photo = photo,
-				.options = options });
+				.options = options
+			});
 		} else if (!photo->loading(PhotoSize::Thumbnail)) {
 			photo->load(PhotoSize::Thumbnail, Data::FileOrigin());
 		}
@@ -951,8 +952,8 @@ void GifsListWidget::sendInlineRequest() {
 	_search->setLoading(true);
 	_inlineRequestId = _api.request(MTPmessages_GetInlineBotResults(
 		MTP_flags(0),
-		_searchBot->inputUser,
-		_inlineQueryPeer->input,
+		_searchBot->inputUser(),
+		_inlineQueryPeer->input(),
 		MTPInputGeoPoint(),
 		MTP_string(_inlineQuery),
 		MTP_string(nextOffset)

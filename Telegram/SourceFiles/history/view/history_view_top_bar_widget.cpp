@@ -977,6 +977,7 @@ void TopBarWidget::refreshInfoButton() {
 			st::topBarInfoButton,
 			infoPeer->userpicShape());
 		info->showSavedMessagesOnSelf(true);
+		info->showMyNotesOnSelf(true);
 		_info.destroy();
 		_info = std::move(info);
 	}
@@ -1840,7 +1841,7 @@ void TopBarWidget::updateOnlineDisplay() {
 				if (!isTopic && lastChatRequest[QString::number(channel->id.value)].requestTime + 60 < now) { // Update every 60 seconds
 					delayUpdate = true;
 					_controller->session().api().request(MTPmessages_GetOnlines(
-							channel->input
+							channel->input()
 					)).done([=](const MTPChatOnlines &result) {
 						const auto count = result.c_chatOnlines().vonlines().v;
 						lastChatRequest[QString::number(channel->id.value)].memberCount = count;

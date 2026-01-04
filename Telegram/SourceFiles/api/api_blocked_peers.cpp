@@ -85,7 +85,7 @@ void BlockedPeers::block(not_null<PeerData*> peer) {
 	}
 	const auto requestId = _api.request(MTPcontacts_Block(
 		MTP_flags(0),
-		peer->input
+		peer->input()
 	)).done([=] {
 		const auto data = _blockRequests.take(peer);
 		peer->setIsBlocked(true);
@@ -138,7 +138,7 @@ void BlockedPeers::unblock(
 	}
 	const auto requestId = _api.request(MTPcontacts_Unblock(
 		MTP_flags(0),
-		peer->input
+		peer->input()
 	)).done([=] {
 		const auto data = _blockRequests.take(peer);
 		peer->setIsBlocked(false);

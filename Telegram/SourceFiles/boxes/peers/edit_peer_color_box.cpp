@@ -335,8 +335,8 @@ PreviewWrap::PreviewWrap(
 
 	const auto session = &_history->session();
 	session->data().viewRepaintRequest(
-	) | rpl::on_next([=](not_null<const Element*> view) {
-		if (view == _element.get()) {
+	) | rpl::on_next([=](Data::RequestViewRepaint data) {
+		if (data.view == _element.get()) {
 			update();
 		}
 	}, lifetime());
@@ -363,6 +363,7 @@ void PreviewWrap::paintEvent(QPaintEvent *e) {
 
 	auto context = _theme->preparePaintContext(
 		_style.get(),
+		rect(),
 		rect(),
 		clip,
 		!window()->isActiveWindow());
@@ -602,7 +603,7 @@ void Set(
 						: Flag(0))
 					| Flag::f_background_emoji_id
 					| (values.forProfile ? Flag::f_for_profile : Flag(0))),
-				channel->inputChannel,
+				channel->inputChannel(),
 				MTP_int(values.colorIndex),
 				MTP_long(values.backgroundEmojiId)));
 		}
@@ -2776,7 +2777,7 @@ void CheckBoostLevel(
 		Fn<std::optional<Ui::AskBoostReason>(int level)> askMore,
 		Fn<void()> cancel) {
 	peer->session().api().request(MTPpremium_GetBoostsStatus(
-		peer->input
+		peer->input()
 	)).done([=](const MTPpremium_BoostsStatus &result) {
 		const auto &data = result.data();
 		if (const auto channel = peer->asChannel()) {

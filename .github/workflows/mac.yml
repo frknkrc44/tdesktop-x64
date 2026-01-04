@@ -76,18 +76,11 @@ jobs:
 
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Free up some disk space.
-        uses: hugoalh/disk-space-optimizer-ghaction@271735125a1b35180620eae7e45c2e9d470c31b0
-        with:
-          general_include: ".+"
-          homebrew_prune: "True"
-          homebrew_clean: "True"
-          npm_prune: "True"
-          npm_clean: "True"
+          sudo sed -i '' '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/ -g//' /opt/homebrew/share/cmake/Modules/Compiler/GNU.cmake
 
       - name: Restore ThirdParty cache.
         id: cache-third-party
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ThirdParty
           key: ${{ runner.OS }}-third-party-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
@@ -95,9 +88,11 @@ jobs:
 
       - name: Restore Libraries cache.
         id: cache-libs
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
-          path: Libraries
+          path: |
+            Libraries
+            ThirdParty
           key: ${{ runner.OS }}-libs-${{ hashFiles(format('{0}/{1}', env.REPO_NAME, env.PREPARE_PATH)) }}
           restore-keys: ${{ runner.OS }}-libs-
 
@@ -106,7 +101,7 @@ jobs:
           ./$REPO_NAME/Telegram/build/prepare/mac.sh silent
 
       - name: Free up some disk space.
-        run: find Libraries -iwholename "*.dir/*" -delete
+        run: find Libraries '(' '(' ! '(' -name '*.a' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' -o -perm +111 ')' -type f ')' -o -empty ')' -delete
 
       - name: Telegram Desktop build.
         if: env.ONLY_CACHE == 'false'
@@ -117,7 +112,7 @@ jobs:
           if [ -n "${{ matrix.defines }}" ]; then
             DEFINE="-D ${{ matrix.defines }}=ON"
             echo Define from matrix: $DEFINE
-            echo "ARTIFACT_NAME=Telegram_${{ matrix.defines }}" >> $GITHUB_ENV
+            echo "ARTIFACT_NAME=Telegram ${{ matrix.defines }}" >> $GITHUB_ENV
           else
             echo "ARTIFACT_NAME=Telegram" >> $GITHUB_ENV
           fi
@@ -159,7 +154,7 @@ jobs:
           cd $REPO_NAME/out/Release
           mkdir artifact
           mv Telegram.app artifact/
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
         with:

@@ -312,9 +312,12 @@ void GlobalTTL::rebuildButtons(TimeId currentTTL) const {
 			QString());
 		radio->setAttribute(Qt::WA_TransparentForMouseEvents);
 		radio->show();
+		const auto padding = button->st().padding;
 		button->sizeValue(
-		) | rpl::on_next([=] {
-			radio->moveToRight(0, radio->checkRect().top());
+		) | rpl::on_next([=](QSize s) {
+			radio->moveToLeft(
+				s.width() - radio->checkRect().width() - padding.left(),
+				radio->checkRect().top());
 		}, radio->lifetime());
 	}
 	_buttons->resizeToWidth(width());
@@ -388,7 +391,7 @@ void GlobalTTL::setupContent() {
 				const auto ttl = apiTTL.periodDefaultHistoryTTLCurrent();
 				for (const auto &peer : peers) {
 					peer->session().api().request(MTPmessages_SetHistoryTTL(
-						peer->input,
+						peer->input(),
 						MTP_int(ttl)
 					)).done([=](const MTPUpdates &result) {
 						peer->session().api().applyUpdates(result);

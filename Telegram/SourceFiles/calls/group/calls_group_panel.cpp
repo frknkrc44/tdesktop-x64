@@ -2133,6 +2133,7 @@ void Panel::trackControl(Ui::RpWidget *widget, rpl::lifetime &lifetime) {
 					trackControlOver(widget, true);
 				}
 			});
+			toggleWideControls(true);
 		} else if (type == QEvent::Leave) {
 			*over = false;
 			crl::on_main(widget, [=] {
@@ -2140,6 +2141,7 @@ void Panel::trackControl(Ui::RpWidget *widget, rpl::lifetime &lifetime) {
 					trackControlOver(widget, false);
 				}
 			});
+			toggleWideControls(false);
 		}
 	}, lifetime);
 }
@@ -2160,7 +2162,6 @@ void Panel::trackControlOver(not_null<Ui::RpWidget*> control, bool over) {
 	} else {
 		Ui::Integration::Instance().unregisterLeaveSubscription(control);
 	}
-	toggleWideControls(over);
 }
 
 void Panel::showStickedTooltip() {

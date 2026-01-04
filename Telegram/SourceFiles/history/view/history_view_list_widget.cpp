@@ -417,9 +417,9 @@ ListWidget::ListWidget(
 	setMouseTracking(true);
 	_scrollDateHideTimer.setCallback([this] { scrollDateHideByTimer(); });
 	_session->data().viewRepaintRequest(
-	) | rpl::on_next([this](auto view) {
-		if (view->delegate() == this) {
-			repaintItem(view);
+	) | rpl::on_next([this](Data::RequestViewRepaint data) {
+		if (data.view->delegate() == this) {
+			repaintItem(data.view, data.rect);
 		}
 	}, lifetime());
 	_session->data().viewResizeRequest(
@@ -433,6 +433,10 @@ ListWidget::ListWidget(
 		if (const auto view = viewForItem(item)) {
 			refreshItem(view);
 		}
+	}, lifetime());
+	_session->data().itemShowHighlightRequest(
+	) | rpl::on_next([this](auto item) {
+		showItemHighlight(item);
 	}, lifetime());
 	_session->data().viewLayoutChanged(
 	) | rpl::on_next([this](auto view) {
@@ -1546,6 +1550,10 @@ void ListWidget::clearTextSelection() {
 void ListWidget::setTextSelection(
 		not_null<Element*> view,
 		TextSelection selection) {
+	if (!selection.empty()) {
+		// We started selecting text in web page preview.
+		ClickHandler::unpressed();
+	}
 	clearSelected();
 	const auto item = view->data();
 	if (_selectedTextItem != item) {
@@ -2204,6 +2212,7 @@ Ui::ChatPaintContext ListWidget::preparePaintContext(
 		.visibleAreaPositionGlobal = mapToGlobal(QPoint(0, _visibleTop)),
 		.visibleAreaTop = _visibleTop,
 		.visibleAreaWidth = width(),
+		.visibleAreaHeight = _visibleBottom - _visibleTop,
 	});
 }
 
@@ -3438,7 +3447,11 @@ void ListWidget::mouseActionStart(
 		Ui::MarkInactivePress(window(), false);
 	}
 
-	if (ClickHandler::getPressed()) {
+	const auto pressed = ClickHandler::getPressed();
+	if (pressed
+		&& (!_overElement
+			|| _overState.pointState == PointState::Outside
+			|| !_overElement->allowTextSelectionByHandler(pressed))) {
 		_mouseAction = MouseAction::PrepareDrag;
 	} else if (hasSelectedItems()) {
 		if (overSelectedItems()) {
@@ -3570,9 +3583,7 @@ void ListWidget::mouseActionFinish(
 
 	_wasSelectedText = false;
 
-	if (_mouseAction == MouseAction::Dragging
-		|| _mouseAction == MouseAction::Selecting
-		|| needItemSelectionToggle) {
+	if (_mouseAction == MouseAction::Dragging || needItemSelectionToggle) {
 		activated = nullptr;
 	} else if (activated) {
 		mouseActionCancel();
@@ -4031,6 +4042,17 @@ void ListWidget::repaintItem(const Element *view) {
 	}
 }
 
+void ListWidget::repaintItem(const Element *view, QRect rect) {
+	if (rect.isNull()) {
+		return repaintItem(view);
+	}
+	if (!view) {
+		return;
+	}
+	const auto top = itemTop(view);
+	update(rect.translated(0, top));
+}
+
 void ListWidget::repaintItem(FullMsgId itemId) {
 	if (const auto view = viewForItem(itemId)) {
 		repaintItem(view);
@@ -4122,6 +4144,25 @@ void ListWidget::refreshItem(not_null<const Element*> view) {
 		viewReplaced(view, i->second.get());
 
 		refreshAttachmentsAtIndex(index);
+	}
+}
+
+void ListWidget::showItemHighlight(not_null<HistoryItem*> item) {
+	const auto history = _delegate->listTranslateHistory();
+	if (history && item->history() != history) {
+		return;
+	} else if (!history && !viewForItem(item)) {
+		return;
+	}
+	const auto position = item->position();
+	auto params = Window::SectionShow{
+		Window::SectionShow::Way::Forward
+	};
+	params.animated = anim::type::normal;
+	if (!showAtPositionNow(position, params, nullptr)) {
+		showAroundPosition(position, [=, this] {
+			return showAtPositionNow(position, params, nullptr);
+		});
 	}
 }
 

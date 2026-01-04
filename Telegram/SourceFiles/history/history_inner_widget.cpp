@@ -410,8 +410,8 @@ HistoryInner::HistoryInner(
 		mouseActionCancel();
 	}, lifetime());
 	session().data().viewRepaintRequest(
-	) | rpl::on_next([this](not_null<const Element*> view) {
-		repaintItem(view);
+	) | rpl::on_next([this](Data::RequestViewRepaint data) {
+		repaintItem(data.view, data.rect);
 	}, lifetime());
 	session().data().viewLayoutChanged(
 	) | rpl::filter([=](not_null<const Element*> view) {
@@ -723,6 +723,19 @@ void HistoryInner::repaintItem(const Element *view) {
 		if (const auto area = _reactionsManager->lookupEffectArea(id)) {
 			update(*area);
 		}
+	}
+}
+
+void HistoryInner::repaintItem(const Element *view, QRect rect) {
+	if (rect.isNull()) {
+		return repaintItem(view);
+	}
+	if (_widget->skipItemRepaint()) {
+		return;
+	}
+	const auto top = itemTop(view);
+	if (top >= 0) {
+		update(rect.translated(0, top));
 	}
 }
 
@@ -1073,6 +1086,7 @@ Ui::ChatPaintContext HistoryInner::preparePaintContext(
 		.visibleAreaPositionGlobal = visibleAreaPositionGlobal,
 		.visibleAreaTop = _visibleAreaTop,
 		.visibleAreaWidth = width(),
+		.visibleAreaHeight = _visibleAreaBottom - _visibleAreaTop,
 	});
 }
 
@@ -2414,8 +2428,12 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 		_widget->fillSenderUserpicMenu(
 			_menu.get(),
 			session->data().peer(PeerId(linkUserpicPeerId)));
-		_menu->popup(e->globalPos());
-		e->accept();
+		if (_menu->empty()) {
+			_menu = nullptr;
+		} else {
+			_menu->popup(e->globalPos());
+			e->accept();
+		}
 		return;
 	}
 	const auto controller = _controller;
@@ -4661,6 +4679,7 @@ void HistoryInner::mouseActionUpdate() {
 						// stop enumeration if we've found a userpic under the cursor
 						if (point.y() >= userpicTop && point.y() < userpicTop + st::msgPhotoSize) {
 							dragState = TextState(nullptr, view->fromPhotoLink());
+							dragState.cursor = CursorState::FromPhoto;
 							dragStateUserpic = true;
 							_dragStateItem = nullptr;
 							lnkhost = view;
@@ -4680,6 +4699,7 @@ void HistoryInner::mouseActionUpdate() {
 	if (dragState.link
 		|| dragState.cursor == CursorState::Date
 		|| dragState.cursor == CursorState::Forwarded
+		|| dragState.cursor == CursorState::FromPhoto
 		|| dragState.customTooltip) {
 		Ui::Tooltip::Show(1000, this);
 	}
@@ -5344,6 +5364,11 @@ QString HistoryInner::tooltipText() const {
 		}
 	}
 	if (const auto view = Element::Moused()) {
+		if (_mouseCursorState == CursorState::FromPhoto) {
+			if (const auto from = view->data()->displayFrom()) {
+				return from->name();
+			}
+		}
 		StateRequest request;
 		const auto local = mapFromGlobal(_mousePosition);
 		const auto point = _widget->clampMousePosition(local);

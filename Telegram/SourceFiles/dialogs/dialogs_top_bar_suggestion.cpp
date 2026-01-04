@@ -130,21 +130,7 @@ void ShowAuthToast(
 		}
 		if (const auto controller = FindSessionController(parent)) {
 			const auto count = float64(list.size());
-			controller->show(Box([=](not_null<Ui::GenericBox*> box) {
-				box->setTitle(tr::lng_unconfirmed_auth_denied_title(
-					lt_count,
-					rpl::single(count)));
-				Ui::InformBox(box, {
-					.text = TextWithEntities()
-						.append(messageText)
-						.append('\n')
-						.append(
-							tr::lng_unconfirmed_auth_denied_warning(
-								tr::now,
-								tr::bold)),
-					.confirmText = tr::lng_archive_hint_button(tr::now),
-				});
-			}));
+			controller->show(Box(ShowAuthDeniedBox, count, messageText));
 		}
 	}
 }
@@ -519,6 +505,9 @@ rpl::producer<Ui::SlideWrap<Ui::RpWidget>*> TopBarSuggestionValue(
 							widget->raise();
 						}, widget->lifetime());
 						for (const auto &id : users) {
+							if (s->inRow.size() >= 3) {
+								break;
+							}
 							if (const auto user = session->data().user(id)) {
 								s->inRow.push_back({ .peer = user });
 							}

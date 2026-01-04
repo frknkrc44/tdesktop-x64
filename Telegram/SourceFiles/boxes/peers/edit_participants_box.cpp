@@ -58,8 +58,8 @@ void RemoveAdmin(
 		Fn<void()> onFail) {
 	const auto newRights = MTP_chatAdminRights(MTP_flags(0));
 	channel->session().api().request(MTPchannels_EditAdmin(
-		channel->inputChannel,
-		user->inputUser,
+		channel->inputChannel(),
+		user->inputUser(),
 		newRights,
 		MTP_string(QString())
 	)).done([=](const MTPUpdates &result) {
@@ -82,8 +82,8 @@ void AddChatParticipant(
 		Fn<void()> onDone,
 		Fn<void()> onFail) {
 	chat->session().api().request(MTPmessages_AddChatUser(
-		chat->inputChat,
-		user->inputUser,
+		chat->inputChat(),
+		user->inputUser(),
 		MTP_int(kForwardMessagesOnAdd)
 	)).done([=](const MTPmessages_InvitedUsers &result) {
 		const auto &data = result.data();
@@ -112,8 +112,8 @@ void SaveChatAdmin(
 		Fn<void()> onFail,
 		bool retryOnNotParticipant = true) {
 	chat->session().api().request(MTPmessages_EditChatAdmin(
-		chat->inputChat,
-		user->inputUser,
+		chat->inputChat(),
+		user->inputUser(),
 		MTP_bool(isAdmin)
 	)).done([=] {
 		chat->applyEditAdmin(user, isAdmin);
@@ -151,8 +151,8 @@ void SaveChannelAdmin(
 		Fn<void()> onDone,
 		Fn<void()> onFail) {
 	channel->session().api().request(MTPchannels_EditAdmin(
-		channel->inputChannel,
-		user->inputUser,
+		channel->inputChannel(),
+		user->inputUser(),
 		AdminRightsToMTP(newRights),
 		MTP_string(rank)
 	)).done([=](const MTPUpdates &result) {
@@ -176,8 +176,8 @@ void SaveChatParticipantKick(
 		Fn<void()> onFail) {
 	chat->session().api().request(MTPmessages_DeleteChatUser(
 		MTP_flags(0),
-		chat->inputChat,
-		user->inputUser
+		chat->inputChat(),
+		user->inputUser()
 	)).done([=](const MTPUpdates &result) {
 		chat->session().api().applyUpdates(result);
 		if (onDone) {
@@ -1523,7 +1523,7 @@ void ParticipantsBoxController::loadMoreRows() {
 	const auto participantsHash = uint64(0);
 
 	_loadRequestId = _api.request(MTPchannels_GetParticipants(
-		channel->inputChannel,
+		channel->inputChannel(),
 		filter,
 		MTP_int(_offset),
 		MTP_int(perPage),
@@ -1934,6 +1934,9 @@ void ParticipantsBoxController::editRestrictedDone(
 
 void ParticipantsBoxController::kickParticipant(not_null<PeerData*> participant) {
 	const auto user = participant->asUser();
+	if (user && user->isInaccessible()) {
+		return kickParticipantSure(participant);
+	}
 	const auto text = ((_peer->isChat() || _peer->isMegagroup())
 		? tr::lng_profile_sure_kick
 		: tr::lng_profile_sure_kick_channel)(
@@ -2160,7 +2163,12 @@ auto ParticipantsBoxController::computeType(
 		: (user && _additional.adminRights(user).has_value())
 		? Rights::Admin
 		: Rights::Normal;
-	result.adminRank = user ? _additional.adminRank(user) : QString();
+	result.canRemove = _additional.canRemoveParticipant(participant)
+		&& user
+		&& user->isInaccessible();
+	if (!result.canRemove) {
+		result.adminRank = user ? _additional.adminRank(user) : QString();
+	}
 	return result;
 }
 
@@ -2245,7 +2253,7 @@ void ParticipantsBoxController::subscribeToCreatorChange(
 		const auto weak = base::make_weak(this);
 		const auto api = &channel->session().api();
 		api->request(MTPchannels_GetParticipants(
-			channel->inputChannel,
+			channel->inputChannel(),
 			MTP_channelParticipantsRecent(),
 			MTP_int(0), // offset
 			MTP_int(channel->session().serverConfig().chatSizeMax),
@@ -2392,7 +2400,7 @@ bool ParticipantsBoxSearchController::loadMoreRows() {
 	const auto participantsHash = uint64(0);
 
 	_requestId = _api.request(MTPchannels_GetParticipants(
-		_channel->inputChannel,
+		_channel->inputChannel(),
 		filter,
 		MTP_int(_offset),
 		MTP_int(perPage),

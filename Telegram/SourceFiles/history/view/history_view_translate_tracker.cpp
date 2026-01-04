@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "apiwrap.h"
 #include "api/api_text_entities.h"
+#include "api/api_transcribes.h"
 #include "core/application.h"
 #include "core/core_settings.h"
 #include "data/data_changes.h"
@@ -159,6 +160,8 @@ bool TranslateTracker::add(
 void TranslateTracker::switchTranslation(
 		not_null<HistoryItem*> item,
 		LanguageId id) {
+	_history->session().api().transcribes().checkSummaryToTranslate(
+		item->fullId());
 	if (item->translationShowRequiresRequest(id)) {
 		_itemsToRequest.emplace(
 			item->fullId(),
@@ -282,7 +285,7 @@ void TranslateTracker::requestSome() {
 	using Flag = MTPmessages_TranslateText::Flag;
 	_requestId = session->api().request(MTPmessages_TranslateText(
 		MTP_flags(Flag::f_peer | Flag::f_id),
-		peer->input,
+		peer->input(),
 		MTP_vector<MTPint>(list),
 		MTPVector<MTPTextWithEntities>(),
 		MTP_string(toTC ? "zh-Hant" : to.twoLetterCode())
