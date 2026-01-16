@@ -1706,14 +1706,13 @@ base::unique_qptr<Ui::PopupMenu> ParticipantsBoxController::rowContextMenu(
 				st::historyHasCustomEmojiPosition,
 				std::move(text));
 			if (const auto n = _navigation) {
-				button->setClickedCallback([=] {
-					n->parentController()->showPeerInfo(by);
+				button->setActionTriggered([=] {
+					n->parentController()->show(PrepareShortInfoBox(by, n));
 				});
 			}
 			result->addSeparator();
 			result->addAction(std::move(button));
 		};
-
 		const auto addJoinInfoAction = [&](
 				tr::phrase<lngtag_date> phrase,
 				TimeId since) {

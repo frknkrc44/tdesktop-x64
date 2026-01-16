@@ -1,4 +1,4 @@
-name: Windows.
+name: Windows
 
 on:
   push:
@@ -39,8 +39,6 @@ on:
       - "Telegram/Telegram/**"
       - "Telegram/configure.sh"
       - "Telegram/Telegram.plist"
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -51,6 +49,7 @@ jobs:
     strategy:
       matrix:
         arch: [Win32, x64]
+        qt: [""]
         generator: ["", "Ninja Multi-Config"]
 
     env:
@@ -68,6 +67,7 @@ jobs:
           mkdir %userprofile%\TBuild\Libraries
           mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
           echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
+          echo LibrariesPath=%GITHUB_WORKSPACE%\TBuild\Libraries>>%GITHUB_ENV%
 
       - name: Get repository name.
         shell: bash
@@ -86,14 +86,10 @@ jobs:
           [ "${{ matrix.arch }}" != Win32 ] && DOCPATH=$TBUILD/$REPO_NAME/docs/building-win-${{ matrix.arch }}.md
           SDK="$(grep "SDK version" $DOCPATH | sed -r 's/.*\*\*(.*)\*\* SDK version.*/\1/')"
           echo "SDK=$SDK" >> $GITHUB_ENV
-
           sed -i '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/${_Zi}//' "$PROGRAMFILES"/CMake/share/cmake*/Modules/Platform/Windows-MSVC.cmake
-
           echo "$(sha256sum $TBUILD/$REPO_NAME/$PREPARE_PATH | awk '{ print $1 }')" >> CACHE_KEY.txt
           echo "$SDK" >> CACHE_KEY.txt
           echo "CACHE_KEY=$(sha256sum CACHE_KEY.txt | awk '{ print $1 }')" >> $GITHUB_ENV
-
-          echo "Configurate git for cherry-picks."
           git config --global user.email "you@example.com"
           git config --global user.name "Sample"
 
@@ -114,15 +110,23 @@ jobs:
         with:
           path: ${{ env.TBUILD }}\ThirdParty
           key: ${{ runner.OS }}-${{ matrix.arch }}-third-party-${{ env.CACHE_KEY }}
-          restore-keys: ${{ runner.OS }}-${{ matrix.arch }}-third-party-
 
       - name: Libraries cache.
         id: cache-libs
         uses: actions/cache@v5
         with:
-          path: ${{ env.TBUILD }}\Libraries
+          path: |
+            ${{ env.LibrariesPath }}\*
+            !${{ env.LibrariesPath }}\[qQ]t[_-]*
           key: ${{ runner.OS }}-${{ matrix.arch }}-libs-${{ env.CACHE_KEY }}
           restore-keys: ${{ runner.OS }}-${{ matrix.arch }}-libs-
+
+      - name: Qt cache.
+        id: cache-qt
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.LibrariesPath }}\[qQ]t[_-]*
+          key: ${{ runner.OS }}-${{ matrix.arch }}-${{ matrix.qt || 'qt' }}-${{ env.CACHE_KEY }}
 
       - name: Libraries.
         env:
@@ -130,80 +134,64 @@ jobs:
           GYP_MSVS_VERSION: 2022
         run: |
           cd %TBUILD%
-          %REPO_NAME%\Telegram\build\prepare\win.bat silent
+          %REPO_NAME%\Telegram\build\prepare\win.bat silent ${{ matrix.qt }}
 
       - name: Read configuration matrix.
         shell: bash
         run: |
           ARTIFACT_NAME="Telegram"
-
           ARCH=""
-          if [ -n "${{ matrix.arch }}" ]; then
-            case "${{ matrix.arch }}" in
-              Win32) ARCH="x86";;
-              *) ARCH="${{ matrix.arch }}";;
-            esac
-            echo "Architecture from matrix: $ARCH"
-            ARTIFACT_NAME="${ARTIFACT_NAME} ${{ matrix.arch }}"
-          fi
-
+          case "${{ matrix.arch }}" in
+            Win32) ARCH="x86";;
+            *) ARCH="${{ matrix.arch }}";;
+          esac
+          ARTIFACT_NAME="${ARTIFACT_NAME} ${{ matrix.arch }}"
           GENERATOR=""
           if [ -n "${{ matrix.generator }}" ]; then
             GENERATOR="-G \"${{ matrix.generator }}\""
-            echo "Generator from matrix: $GENERATOR"
             ARTIFACT_NAME="${ARTIFACT_NAME} ${{ matrix.generator }}"
           fi
           echo "TDESKTOP_BUILD_GENERATOR=$GENERATOR" >> $GITHUB_ENV
-
           [ -n "$GENERATOR" ] && ARCH=""
           echo "TDESKTOP_BUILD_ARCH=$ARCH" >> $GITHUB_ENV
-
-          DEFINE=""
-          if [ -n "${{ matrix.defines }}" ]; then
-            DEFINE="-D ${{ matrix.defines }}=ON"
-            echo "Define from matrix: $DEFINE"
-            ARTIFACT_NAME="${ARTIFACT_NAME} ${{ matrix.defines }}"
-          fi
-          echo "TDESKTOP_BUILD_DEFINE=$DEFINE" >> $GITHUB_ENV
-
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-
-          API="-D TDESKTOP_API_TEST=OFF"
-          if [ $GITHUB_REF == 'refs/heads/nightly' ] || [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "Use the open credentials."
-            API="-D TDESKTOP_API_ID=611335 -D TDESKTOP_API_HASH=d524b414d21f4d37f08684c1df41ac9c"
-          else
-            API="-D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }}"
-          fi
-          echo "TDESKTOP_BUILD_API=$API" >> $GITHUB_ENV
+          echo "TDESKTOP_BUILD_API=-D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }}" >> $GITHUB_ENV
 
       - name: Free up some disk space.
         shell: bash
-        run: find TBuild/Libraries '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -path '*/include/*'  -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' ')' -type f ')' -o -empty ')' -delete
+        run: find TBuild/Libraries '(' '(' ! '(' -name '*.lib' -o -name '*.a' -o -name '*.exe' -o -name '*.h' -o -name '*.hpp' -o -name '*.inc' -o -name '*.cmake' -o -path '*/include/*' -o -path '*/objects-*' -o -path '*/cache_keys/*' -o -path '*/patches/*' ')' -type f ')' -o -empty ')' -delete
 
       - name: Telegram Desktop build.
         if: env.ONLY_CACHE == 'false'
         run: |
           cd %TBUILD%\%REPO_NAME%\Telegram
-
+          if "%TDESKTOP_BUILD_API%"=="-D TDESKTOP_API_ID= -D TDESKTOP_API_HASH=" (
+            echo "Error: API Secrets are missing"
+            exit 1
+          )
           call configure.bat ^
           %TDESKTOP_BUILD_GENERATOR% ^
           %TDESKTOP_BUILD_ARCH% ^
           %TDESKTOP_BUILD_API% ^
+          ${{ matrix.qt }} ^
           -D CMAKE_CONFIGURATION_TYPES=Release ^
           -D CMAKE_COMPILE_WARNING_AS_ERROR=OFF ^
           -D CMAKE_MSVC_DEBUG_INFORMATION_FORMAT= ^
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON ^
-          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF ^
-          %TDESKTOP_BUILD_DEFINE%
-
+          -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF
           cmake --build ..\out --config Release --parallel
 
       - name: Move artifact.
         if: (env.UPLOAD_ARTIFACT == 'true') || (github.ref == 'refs/heads/nightly')
         run: |
           mkdir artifact
-          move %TBUILD%\%REPO_NAME%\out\Release\*.exe artifact\
+          if exist %TBUILD%\%REPO_NAME%\out\Release\Telegram.exe (
+            move %TBUILD%\%REPO_NAME%\out\Release\Telegram.exe artifact\
+            if exist %TBUILD%\%REPO_NAME%\out\Release\Updater.exe move %TBUILD%\%REPO_NAME%\out\Release\Updater.exe artifact\
+          ) else (
+            move %TBUILD%\%REPO_NAME%\out\Release\*.exe artifact\
+          )
+
       - uses: actions/upload-artifact@v6
         name: Upload artifact.
         if: (env.UPLOAD_ARTIFACT == 'true') || (github.ref == 'refs/heads/nightly')
