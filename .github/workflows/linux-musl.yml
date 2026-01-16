@@ -1,0 +1,98 @@
+name: Linux Build Alpine
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'changelog.txt'
+      - 'LEGAL'
+      - 'LICENSE'
+      - '.github/**'
+      - '!.github/workflows/linux.yml'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: Alpine Musl Native
+    runs-on: ubuntu-latest
+    env:
+      UPLOAD_ARTIFACT: "true"
+      BUILD_TYPE: MinSizeRel
+      TDLIB_COMMIT: 369ee922b45bfa7e8da357e4d62e93925862d86d
+    
+    container: 
+      image: alpine:latest
+      options: --user root
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apk update
+          apk add alpine-sdk cmake samurai meson python3 git bash \
+                  ada-dev extra-cmake-modules qt6-qt5compat-dev \
+                  qt6-qtsvg-dev qt6-qtwayland-dev tg_owt-dev gperf \
+                  opus-dev alsa-lib-dev pulseaudio-dev boost-dev \
+                  fmt-dev abseil-cpp-dev ffmpeg-dev gobject-introspection-dev \
+                  libdispatch-dev gsl-dev hunspell-dev lz4-dev minizip-dev \
+                  msgsl openal-soft-dev "openssl-dev>3" range-v3-dev \
+                  rnnoise-dev tl-expected wayland-dev libxcb-dev \
+                  xcb-util-keysyms-dev xxhash-dev zlib-dev libavif-dev \
+                  libheif-dev libjxl-dev libvpx-dev protobuf-dev \
+                  qt6-qtimageformats font-opensans
+
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Fetch TDLib
+        run: |
+          wget https://github.com/tdlib/td/archive/${{ env.TDLIB_COMMIT }}.tar.gz
+          tar -xzf ${{ env.TDLIB_COMMIT }}.tar.gz
+          mv td-${{ env.TDLIB_COMMIT }} td
+
+      - name: Build TDLib
+        run: |
+          export LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768"
+          cmake -S td -B td/build \
+                -DCMAKE_BUILD_TYPE=None \
+                -DCMAKE_INSTALL_PREFIX="$PWD/td/install" \
+                -Wno-dev \
+                -DTD_E2E_ONLY=ON
+          cmake --build td/build
+          cmake --install td/build
+
+      - name: Build Telegram Desktop
+        run: |
+          export LDFLAGS="$LDFLAGS -Wl,-z,stack-size=1024768"
+          export CFLAGS="$CFLAGS -O2 -march=x86-64 -mtune=generic"
+          export CXXFLAGS="$CXXFLAGS -O2 -march=x86-64 -mtune=generic"
+          
+          cmake -B out -G Ninja . \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF \
+            -DTDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
+            -DTDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
+            -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
+            -DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
+            -DDESKTOP_APP_USE_PACKAGED=ON \
+            -Dtde2e_DIR="$PWD/td/install/lib/cmake/tde2e"
+          
+          cmake --build out
+
+      - name: Verify and Strip
+        run: |
+          BINARY_PATH=$(find out/ -type f -executable -name Telegram -o -name telegram-desktop | head -n 1)
+          if [ -z "$BINARY_PATH" ]; then echo "Binary not found"; exit 1; fi
+          strip --strip-all "$BINARY_PATH"
+          mkdir -p artifact
+          cp "$BINARY_PATH" artifact/Telegram
+          echo "FINAL_BIN=artifact/Telegram" >> $GITHUB_ENV
+
+      - name: Upload Artifact
+        if: env.UPLOAD_ARTIFACT == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Telegram-Alpine-Musl-Core2Duo
+          path: artifact/

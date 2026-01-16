@@ -1,0 +1,97 @@
+name: Flatpak Packager
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Linux Build"]
+    types:
+      - completed
+
+jobs:
+  flatpak:
+    name: Package 64Gram
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Download Latest Binary Artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: linux.yml
+          name: Telegram-Desktop
+          repo: nubesurrealista/tdesktop-x64
+          workflow_conclusion: success
+
+      - name: Prepare Assets
+        run: |
+          curl -L https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg -o icon.svg
+          cat <<EOT > org.telegram.nube.desktop
+          [Desktop Entry]
+          Name=64Gram
+          Comment=Fork de TG Desktop
+          Exec=Telegram -- %u
+          Icon=org.telegram.nube
+          Terminal=false
+          Type=Application
+          Categories=Network;InstantMessaging;
+          StartupWMClass=Telegram
+          GenericName=Cliente no oficial basado en tg Desktop
+          MimeType=x-scheme-handler/tg;
+          EOT
+
+      - name: Create Flatpak Manifest
+        run: |
+          cat <<EOF > org.telegram.nube.yml
+          app-id: org.telegram.nube
+          runtime: org.gnome.Platform
+          runtime-version: '48'
+          sdk: org.gnome.Sdk
+          command: Telegram
+          finish-args:
+            - --share=ipc
+            - --share=network
+            - --socket=wayland
+            - --socket=fallback-x11
+            - --socket=pulseaudio
+            - --device=all
+            - --talk-name=org.freedesktop.Notifications
+            - --talk-name=org.gnome.Mutter.IdleMonitor
+            - --talk-name=org.kde.StatusNotifierWatcher
+            - --talk-name=com.canonical.AppMenu.Registrar
+            - --talk-name=org.sigxcpu.Feedback
+            - --filesystem=home
+            - --unset-env=QT_PLUGIN_PATH
+          modules:
+            - name: telegram-installer
+              buildsystem: simple
+              build-commands:
+                - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/scalable/apps/
+                - cp Telegram /app/bin/Telegram
+                - chmod +x /app/bin/Telegram
+                - cp icon.svg /app/share/icons/hicolor/scalable/apps/org.telegram.nube.svg
+                - cp org.telegram.nube.desktop /app/share/applications/org.telegram.nube.desktop
+              sources:
+                - type: file
+                  path: Telegram
+                - type: file
+                  path: icon.svg
+                - type: file
+                  path: org.telegram.nube.desktop
+          EOF
+
+      - name: Build Flatpak Bundle
+        run: |
+          flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir org.telegram.nube.yml
+          flatpak build-bundle repo 64Gram.flatpak org.telegram.nube
+
+      - name: Upload Final Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: 64Gram-Flatpak
+          path: 64Gram.flatpak
