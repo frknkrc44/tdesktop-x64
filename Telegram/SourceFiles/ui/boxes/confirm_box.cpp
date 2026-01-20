@@ -51,7 +51,9 @@ void ConfirmBox(not_null<Ui::GenericBox*> box, ConfirmBoxArgs &&args) {
 				if (auto callback = (*callbackPtr)) {
 					callback(crl::guard(weak, [=] { weak->closeBox(); }));
 				}
-			} else if (weak) {
+			}
+
+			if (weak) {
 				weak->closeBox();
 			}
 		};
