@@ -271,9 +271,6 @@ void EditLinkBox(
 		}
 	});
 
-	url->customTab(true);
-	text->customTab(true);
-
 	const auto clearFullSelection = [=](not_null<Ui::InputField*> input) {
 		if (input->empty()) {
 			return;
@@ -289,17 +286,20 @@ void EditLinkBox(
 	};
 
 	url->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		clearFullSelection(url);
 		text->setFocus();
+		*handled = true;
 	}, url->lifetime());
+
 	text->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		if (!url->empty()) {
 			url->selectAll();
 		}
 		clearFullSelection(text);
 		url->setFocus();
+		*handled = true;
 	}, text->lifetime());
 }
 
