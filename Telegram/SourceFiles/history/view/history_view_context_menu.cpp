@@ -94,7 +94,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 #include "spellcheck/spellcheck_types.h"
-#include "iv/iv_instance.h" 
+#include "iv/iv_instance.h"
 #include "facades.h"
 #include "apiwrap.h"
 #include "styles/style_chat.h"
@@ -1511,9 +1511,6 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
 	AddReplyToMessageAction(result, request, list);
 	AddTodoListAction(result, request, list);
 
-	if (hasWhoReactedItem) {
-		AddWhoReactedAction(result, list, item, list->controller());
-	}
 	if (request.overSelection
 		&& !list->hasCopyRestrictionForSelected()
 		&& !list->getSelectedText().empty()) {
