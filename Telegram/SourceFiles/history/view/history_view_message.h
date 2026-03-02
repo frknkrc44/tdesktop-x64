@@ -153,7 +153,6 @@ public:
 	TopicButton *displayedTopicButton() const override;
 	bool unwrapped() const override;
 	int minWidthForMedia() const override;
-	bool displayFastForward() const override;
 	bool displayRightActionComments() const;
 	std::optional<QSize> rightActionSize() const override;
 	void drawRightAction(
@@ -363,6 +362,7 @@ private:
 	mutable Ui::Text::String _fromName;
 	mutable std::unique_ptr<FromNameStatus> _fromNameStatus;
 	mutable std::unique_ptr<Ui::RoundCheckbox> _selectionRoundCheckbox;
+	mutable bool _previousMode = false;
 
 	mutable int _fromNameVersion = 0;
 	uint32 _bubbleWidthLimit : 27 = 0;

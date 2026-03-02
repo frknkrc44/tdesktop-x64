@@ -757,7 +757,7 @@ PeerData *ParticipantsAdditionalData::applyParticipant(
 				&& overrideRole != Role::Members) {
 				return logBad();
 			}
-			return applyRegular(data.userId());
+			return applyRegular(data);
 		}
 		case Api::ChatParticipant::Type::Restricted:
 		case Api::ChatParticipant::Type::Banned:
@@ -2456,9 +2456,6 @@ void ParticipantsBoxController::refreshCustomStatus(
 	const auto user = participant->asUser();
 	QString title;
 	if (_role == Role::Admins) {
-		if (_additional.adminRank(user) != "") {
-			title = _additional.adminRank(user) + "|";
-		}
 		Assert(user != nullptr);
 		if (const auto by = _additional.adminPromotedBy(user)) {
 			row->setCustomStatus(title+tr::lng_channel_admin_status_promoted_by(

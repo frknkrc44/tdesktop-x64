@@ -279,17 +279,12 @@ void Message::refreshRightBadge() {
 		}
 		const auto channel = item->history()->peer->asMegagroup();
 		const auto user = item->author()->asUser();
-<<<<<<< HEAD
-		const auto isSendAs = data()->history()->peer->isMegagroup() && data()->from()->isChannel();
+
+		const auto isSendAs = item->history()->peer->isMegagroup() && item->from()->isChannel();
 		if (isSendAs) {
-			return tr::lng_channel_status(tr::now);
+			return { tr::lng_channel_status(tr::now), BadgeRole::User, false };
 		}
-		if (!channel || !user) {
-			return QString();
-||||||| 86b4155605
-		if (!channel || !user) {
-			return QString();
-=======
+
 		if (!channel) {
 			if (const auto chat = item->history()->peer->asChat()) {
 				if (user) {
@@ -310,7 +305,6 @@ void Message::refreshRightBadge() {
 		}
 		if (!user) {
 			return { QString(), BadgeRole::User, false };
->>>>>>> 1705e5a03e98472b96995e6fbecb812f41e22675
 		}
 		const auto info = channel->mgInfo.get();
 		const auto userId = peerToUser(user->id);
