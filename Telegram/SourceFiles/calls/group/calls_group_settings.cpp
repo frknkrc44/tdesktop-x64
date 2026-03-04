@@ -200,7 +200,7 @@ object_ptr<ShareBox> ShareInviteLinkBox(
 			comment.text = link;
 		}
 		auto &api = peer->session().api();
-		for (const auto thread : result) {
+		for (const auto &thread : result) {
 			auto message = Api::MessageToSend(
 				Api::SendAction(thread, options));
 			message.textWithTags = comment;
