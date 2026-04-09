@@ -423,6 +423,7 @@ public:
 		PeerId dataPeerId,
 		const MTPmessages_Messages &data);
 
+	void viewHeightAdjusted(not_null<Element*> view, int delta);
 	void forgetScrollState() {
 		scrollTopItem = nullptr;
 	}
@@ -561,6 +562,7 @@ private:
 	void mainViewRemoved(
 		not_null<HistoryBlock*> block,
 		not_null<Element*> view);
+	void mainViewHeightAdjusted(not_null<Element*> view, int delta);
 
 	TimeId adjustedChatListTimeId() const override;
 	void changedChatListPinHook() override;
