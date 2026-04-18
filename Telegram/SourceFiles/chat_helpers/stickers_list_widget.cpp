@@ -2625,7 +2625,7 @@ void StickersListWidget::refreshRecent() {
 }
 
 uint16_t getRecentDisplayLimit() {
-	int limit = GetEnhancedInt("recent_display_limit");
+	const auto limit = GetEnhancedInt("recent_display_limit");
 	switch (limit) {
 		case 0: return 0;
 		case 1: return 40;
@@ -2633,8 +2633,7 @@ uint16_t getRecentDisplayLimit() {
 		case 3: return 80;
 		case 4: return 100;
 		case 5: return 120;
-		case 6: return 20;
-		default: return 20;
+		default: return kRecentDisplayLimit;
 	}
 }
 
