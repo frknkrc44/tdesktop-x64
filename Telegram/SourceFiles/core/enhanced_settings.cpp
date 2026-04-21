@@ -207,6 +207,19 @@ namespace EnhancedSettings {
 			}
 		});
 
+		ReadOption(settings, "recent_display_limit", [&](auto v) {
+			if (v.isDouble()) {
+				int value = v.toInt();
+				if (value < 0) {
+					gEnhancedOptions.insert("recent_display_limit", 6);
+				} else if (value > 6) {
+					gEnhancedOptions.insert("recent_display_limit", 6);
+				} else {
+					gEnhancedOptions.insert("recent_display_limit", value);
+				}
+			}
+		});
+
 		ReadStringOption(settings, "radio_controller", [&](auto v) {
 			if (v.isEmpty()) {
 				SetEnhancedValue("radio_controller", "http://localhost:2468");
@@ -320,7 +333,7 @@ namespace EnhancedSettings {
 		settings.insert(qsl("translate_to_tc"), false);
 		settings.insert(qsl("show_similar_on_joined"), false);
 		settings.insert(qsl("hide_stories"), false);
-		settings.insert(qsl("recent_display_limit"), 20);
+		settings.insert(qsl("recent_display_limit"), 6);
 		settings.insert(qsl("screenshot_mode"), false);
 		settings.insert(qsl("hide_star_ratings"), false);
 
