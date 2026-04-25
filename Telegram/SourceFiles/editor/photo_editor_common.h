@@ -11,17 +11,14 @@ namespace Editor {
 
 class Scene;
 
-struct PhotoModifications {
-	int angle = 0;
-	bool flipped = false;
-	QRect crop;
-	std::shared_ptr<Scene> paint = nullptr;
-
-	[[nodiscard]] bool empty() const;
-	[[nodiscard]] explicit operator bool() const;
-	~PhotoModifications();
-
+enum class RoundedCornersLevel {
+	Large,
+	Medium,
+	Small,
+	None,
 };
+
+[[nodiscard]] float64 RoundedCornersMultiplier(RoundedCornersLevel level);
 
 struct EditorData {
 	enum class CropType {
@@ -35,6 +32,21 @@ struct EditorData {
 	QSize exactSize;
 	CropType cropType = CropType::Rect;
 	bool keepAspectRatio = false;
+	bool fixedCrop = false;
+};
+
+struct PhotoModifications {
+	int angle = 0;
+	bool flipped = false;
+	QRect crop;
+	EditorData::CropType cropType = EditorData::CropType::Rect;
+	RoundedCornersLevel cornersLevel = RoundedCornersLevel::Large;
+	std::shared_ptr<Scene> paint = nullptr;
+
+	[[nodiscard]] bool empty() const;
+	[[nodiscard]] explicit operator bool() const;
+	~PhotoModifications();
+
 };
 
 [[nodiscard]] QImage ImageModified(
