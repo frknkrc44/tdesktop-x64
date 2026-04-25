@@ -383,7 +383,7 @@ void RecentDisplayLimitController::prepare() {
 
 	_optionGroup = std::make_shared<Ui::RadiobuttonGroup>(GetEnhancedInt("recent_display_limit"));
 
-	for (int i = 0; i <= 5; i++) {
+	for (int i = 0; i <= 6; i++) {
 		const auto button = Ui::CreateChild<Ui::Radiobutton>(
 				this,
 				_optionGroup,
@@ -399,6 +399,8 @@ void RecentDisplayLimitController::prepare() {
 
 QString RecentDisplayLimitController::Label(int limit) {
 	switch (limit) {
+		case 0:
+			return QString("0");
 		case 1:
 			return QString("40");
 		case 2:
@@ -409,6 +411,7 @@ QString RecentDisplayLimitController::Label(int limit) {
 			return QString("100");
 		case 5:
 			return QString("120");
+		case 6:
 		default:
 			return tr::lng_settings_recent_display_limit_default(tr::now);
 	}
