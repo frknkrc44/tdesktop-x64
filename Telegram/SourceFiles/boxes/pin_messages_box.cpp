@@ -67,8 +67,7 @@ void PinMessageBox(
 		topicRootId,
 		monoforumPeerId);
 	const auto state = box->lifetime().make_state<State>();
-	const auto api = box->lifetime().make_state<MTP::Sender>(
-		&peer->session().mtp());
+	const auto api = &peer->session().api();
 
 	auto checkbox = [&]() -> object_ptr<Ui::Checkbox> {
 		if (peer->isUser() && !peer->isSelf()) {
