@@ -49,7 +49,6 @@ jobs:
       matrix:
         defines:
           - ""
-          - "DESKTOP_APP_DISABLE_X11_INTEGRATION"
 
     env:
       UPLOAD_ARTIFACT: "true"
@@ -58,12 +57,13 @@ jobs:
 
     steps:
       - name: Clone.
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: First set up.
         run: |
+          echo "WEEK=$(date -u +%G%V)" >> $GITHUB_ENV
           sudo apt update
           curl -sSL https://install.python-poetry.org | python3 -
           cd Telegram/build/docker/centos_env
@@ -83,7 +83,7 @@ jobs:
 
       - name: Libraries cache.
         id: cache-libs
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ${{ runner.temp }}/.buildx-cache
@@ -113,12 +113,13 @@ jobs:
           rm -rf ${{ runner.temp }}/.buildx-cache
           mv ${{ runner.temp }}/.buildx-cache{-new,}
 
-      - name: Telegram Desktop cache.
+      - name: Restore Telegram Desktop cache.
+        id: cache-tdesktop
         if: env.ONLY_CACHE == 'false'
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/.tdesktop-cache
-          key: ${{ runner.OS }}-tdesktop-${{ matrix.defines || 'null' }}-${{ github.run_id }}
+          key: ${{ runner.OS }}-tdesktop-${{ matrix.defines || 'null' }}-${{ env.WEEK }}
           restore-keys: ${{ runner.OS }}-tdesktop-${{ matrix.defines || 'null' }}-
 
       - name: Telegram Desktop build.

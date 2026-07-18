@@ -76,6 +76,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_instance.h"
 #include "apiwrap.h"
 
+#include "styles/style_chat_helpers.h"
+
 #include <QtGui/QGuiApplication>
 
 #include "boxes/abstract_box.h"
@@ -920,7 +922,11 @@ bool ShowInviteLink(
 		return false;
 	}
 	QGuiApplication::clipboard()->setText(link);
-	controller->showToast(tr::lng_group_invite_copied(tr::now));
+	controller->showToast({
+		.text = { tr::lng_group_invite_copied(tr::now) },
+		.iconLottie = u"toast/voip_invite"_q,
+		.iconLottieSize = st::toastLottieIconSize,
+	});
 	return true;
 }
 
@@ -939,7 +945,11 @@ bool CopyPeerId(
 		const QVariant &context) {
 	TextUtilities::SetClipboardText({ match->captured(1) });
 	if (controller) {
-		controller->showToast(u"ID copied to clipboard."_q);
+		controller->showToast({
+			.text = { u"ID copied to clipboard."_q },
+			.iconLottie = u"toast/copy"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	}
 	return true;
 }
@@ -1212,7 +1222,11 @@ bool ShowCollectibleUsername(
 				TextUtilities::SetClipboardText({
 					strong->session().createInternalLinkFull(username)
 				});
-				strong->showToast(tr::lng_username_copied(tr::now));
+				strong->showToast({
+					.text = { tr::lng_username_copied(tr::now) },
+					.iconLottie = u"toast/voip_invite"_q,
+					.iconLottieSize = st::toastLottieIconSize,
+				});
 			}
 		}
 	});
@@ -1230,7 +1244,11 @@ bool CopyUsernameLink(
 	TextUtilities::SetClipboardText({
 		controller->session().createInternalLinkFull(username)
 	});
-	controller->showToast(tr::lng_username_copied(tr::now));
+	controller->showToast({
+		.text = { tr::lng_username_copied(tr::now) },
+		.iconLottie = u"toast/voip_invite"_q,
+		.iconLottieSize = st::toastLottieIconSize,
+	});
 	return true;
 }
 
@@ -1243,7 +1261,11 @@ bool CopyUsername(
 	}
 	const auto username = match->captured(1);
 	TextUtilities::SetClipboardText({ '@' + username });
-	controller->showToast(tr::lng_username_text_copied(tr::now));
+	controller->showToast({
+		.text = { tr::lng_username_text_copied(tr::now) },
+		.iconLottie = u"toast/copy"_q,
+		.iconLottieSize = st::toastLottieIconSize,
+	});
 	return true;
 }
 
@@ -1430,7 +1452,11 @@ void ExportTestChatTheme(
 		const auto slug = Data::CloudTheme::Parse(session, result, true).slug;
 		QGuiApplication::clipboard()->setText(
 			session->createInternalLinkFull("addtheme/" + slug));
-		show->showToast(tr::lng_background_link_copied(tr::now));
+		show->showToast({
+			.text = { tr::lng_background_link_copied(tr::now) },
+			.iconLottie = u"toast/voip_invite"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	}).fail([=](const MTP::Error &error) {
 		show->showToast(u"Error: "_q + error.type());
 	}).send();
@@ -1851,7 +1877,7 @@ const std::vector<LocalUrlHandler> &LocalUrlHandlers() {
 			ResolveStarsSettings
 		},
 		{
-			u"^ton/?(^\\?.*)?(#|$)"_q,
+			u"^(ton|grams)/?(^\\?.*)?(#|$)"_q,
 			ResolveTonSettings
 		},
 		{

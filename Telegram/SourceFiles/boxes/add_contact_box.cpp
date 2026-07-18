@@ -43,6 +43,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_self_destruct.h"
 #include "main/main_session.h"
 #include "facades.h"
+#include "styles/style_chat_helpers.h"
 #include "styles/style_info.h"
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
@@ -1249,7 +1250,11 @@ void SetupChannelBox::mousePressEvent(QMouseEvent *e) {
 		return;
 	} else if (!_channel->inviteLink().isEmpty()) {
 		QGuiApplication::clipboard()->setText(_channel->inviteLink());
-		showToast(tr::lng_create_channel_link_copied(tr::now));
+		showToast({
+			.text = { tr::lng_create_channel_link_copied(tr::now) },
+			.iconLottie = u"toast/voip_invite"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	} else if (_channel->isFullLoaded() && !_creatingInviteLink) {
 		_creatingInviteLink = true;
 		_channel->session().api().inviteLinks().create({ _channel });

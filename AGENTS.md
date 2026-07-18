@@ -129,6 +129,13 @@ Retrying builds wastes time and context. The ONLY fix is for the user to close t
 - Do not save source, header, build/config, style, or localization files as UTF-8 with BOM. Use UTF-8 without BOM.
 - When rewriting project text files for normalization, preserve file content otherwise and do not introduce a BOM.
 
+## Commits
+
+- Subject: one concise, plain-language line summarizing the change, ~50-60 characters, matching the style of recent `git log` subjects. This is usually the entire message.
+- Add a short plain-language body only when the subject can't carry it (what was done, not the technical how) — a line or two at most.
+- Never add a `Co-Authored-By:` line or any tool/assistant attribution trailer.
+- Never add `Autotask:`/attempt or other workflow markers — commits read like normal history.
+
 ## Local Storage Serialization
 
 Both app-level (`Core::Settings`) and session-level (`Main::SessionSettings`) use sequential binary serialization via `QDataStream`. Key rules:
@@ -233,6 +240,29 @@ auto text = u"Settings"_q;
 // Instead of this:
 auto text = QStringLiteral("Settings");
 ```
+
+**Never use `Q_OS_LINUX` for platform checks in new code:**
+
+Telegram Desktop distinguishes at most three platforms: Windows / macOS / all-other. The "all-other" branch covers Linux, the BSD variants and more — and this is almost always the branch you want. `Q_OS_LINUX` narrows it to Linux alone, silently excluding the non-Linux Unix platforms, which is almost never intended. For the all-other branch use `!defined Q_OS_WIN && !defined Q_OS_MAC` at compile time, or its runtime equivalent `Platform::IsLinux()` — which, despite the name, means exactly `!defined Q_OS_WIN && !defined Q_OS_MAC` ("everything except Windows and macOS"), not Linux specifically:
+
+```cpp
+// BAD - excludes FreeBSD and other non-Linux Unix:
+#ifdef Q_OS_LINUX
+UnixSpecificCode();
+#endif // Q_OS_LINUX
+
+// GOOD - the all-other branch, compile time:
+#if !defined Q_OS_WIN && !defined Q_OS_MAC
+UnixSpecificCode();
+#endif // !Q_OS_WIN && !Q_OS_MAC
+
+// GOOD - the all-other branch, runtime (same meaning, NOT Linux-only):
+if (Platform::IsLinux()) {
+	UnixSpecificCode();
+}
+```
+
+`Q_OS_LINUX` is only for the rare case where you genuinely want exactly Linux and not the other Unix-like systems — usually you don't. The few existing uses (`Telegram/SourceFiles/core/sandbox.cpp`, `Telegram/SourceFiles/platform/linux/specific_linux.cpp`) are such genuinely Linux-only code paths and stay as-is.
 
 ## API Usage
 

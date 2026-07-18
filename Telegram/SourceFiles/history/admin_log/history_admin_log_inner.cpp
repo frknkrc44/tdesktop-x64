@@ -363,7 +363,9 @@ InnerWidget::InnerWidget(
 }
 
 bool InnerWidget::myView(not_null<const HistoryView::Element*> view) const {
-	return !_items.empty() && (view->delegate().get() == this);
+	return !_beingDestroyed
+		&& !_items.empty()
+		&& (view->delegate().get() == this);
 }
 
 Main::Session &InnerWidget::session() const {
@@ -834,6 +836,12 @@ void InnerWidget::elementCancelUpload(const FullMsgId &context) {
 void InnerWidget::elementShowTooltip(
 	const TextWithEntities &text,
 	Fn<void()> hiddenCallback) {
+}
+
+void InnerWidget::elementShowHiddenSenderTooltip(
+		FullMsgId itemId,
+		const TextWithEntities &text) {
+	_controller->showToast(TextWithEntities(text));
 }
 
 bool InnerWidget::elementAnimationsPaused() {
@@ -3285,6 +3293,10 @@ void InnerWidget::touchScrollUpdated(const QPoint &screenPos) {
 	touchUpdateSpeed();
 }
 
-InnerWidget::~InnerWidget() = default;
+InnerWidget::~InnerWidget() {
+	_beingDestroyed = true;
+	clearDisplayItems(DisplayPointerScope::All);
+	base::take(_items);
+}
 
 } // namespace AdminLog

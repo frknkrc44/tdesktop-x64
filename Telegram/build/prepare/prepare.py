@@ -455,7 +455,7 @@ if customRunCommand:
 stage('patches', """
     git clone https://github.com/desktop-app/patches.git
     cd patches
-    git checkout 701cfb4b3d6612188d168f198c842114fd64726f
+    git checkout 52c8f8bf26eed545daf602e27c3072c03f36da8a
 mac:
     git clone https://github.com/desktop-app/qt6_highsierra_patches.git qt6_highsierra
     cd qt6_highsierra
@@ -639,7 +639,7 @@ win32_release:
 win64_release:
     perl Configure no-shared no-tests VC-WIN64A /FS
 winarm_release:
-    perl Configure no-shared no-tests VC-WIN64-ARM /FS
+    perl Configure no-shared no-tests VC-WIN64-ARM /FS /Gs4096
 win_release:
     jom -j%NUMBER_OF_PROCESSORS% build_libs
     mkdir out
@@ -1463,7 +1463,7 @@ if qt < '6':
 win:
     git clone https://github.com/desktop-app/tg_angle.git
     cd tg_angle
-    git checkout fedf9110db
+    git checkout d4c3606e47
     mkdir out
     cd out
 release:
@@ -1534,7 +1534,10 @@ win:
         -nomake tests ^
         -platform win32-msvc
 
-    jom -j%NUMBER_OF_PROCESSORS%
+    rem jom -jN occasionally fails to create the shared mkspecs\\modules-inst
+    rem directory due to a race in qmake's mkpath under parallel builds; the
+    rem build is incremental, so simply retrying picks up where it stopped.
+    jom -j%NUMBER_OF_PROCESSORS% || jom -j%NUMBER_OF_PROCESSORS%
     jom -j%NUMBER_OF_PROCESSORS% install
 """)
 else: # qt > '6'

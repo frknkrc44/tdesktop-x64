@@ -78,6 +78,8 @@ public:
 		ActiveChat activeChat,
 		SendActionPainter *sendAction);
 	void setCustomTitle(const QString &title);
+	void setTitleShownRatio(float64 shown);
+	[[nodiscard]] int titleLeft() const;
 
 	void showChooseMessagesForReport(Data::ReportInput reportInput);
 	
@@ -91,6 +93,7 @@ public:
 	void searchEnableChooseFromUser(bool enable, bool visible);
 	bool searchSetFocus();
 	[[nodiscard]] bool searchMode() const;
+	[[nodiscard]] rpl::producer<bool> searchModeChanges() const;
 	[[nodiscard]] bool searchHasFocus() const;
 	[[nodiscard]] rpl::producer<> searchCancelled() const;
 	[[nodiscard]] rpl::producer<> searchSubmitted() const;
@@ -147,9 +150,13 @@ private:
 	struct EmojiInteractionSeenAnimation;
 
 	[[nodiscard]] bool rootChatsListBar() const;
+	[[nodiscard]] bool communityChatsListBar() const;
 	void refreshInfoButton();
 	void refreshLang();
 	void updateSearchVisibility();
+	void updateSearchJumpToDateVisibility();
+	[[nodiscard]] bool searchJumpToDateFits() const;
+	void updateChooseFromUserGeometry();
 	void updateControlsGeometry();
 	void slideAnimationCallback();
 	void updateInfoToggleActive();
@@ -181,6 +188,7 @@ private:
 	void connectingAnimationCallback();
 
 	void paintTopBar(Painter &p);
+	[[nodiscard]] PeerData *titleNamePeer() const;
 	void paintStatus(
 		Painter &p,
 		int left,
@@ -237,6 +245,7 @@ private:
 	rpl::event_stream<> _searchSubmitted;
 	rpl::event_stream<> _jumpToDateRequests;
 	rpl::event_stream<> _chooseFromUserRequests;
+	rpl::event_stream<bool> _searchModeChanges;
 
 	object_ptr<Ui::IconButton> _back;
 	object_ptr<Ui::IconButton> _cancelChoose;
@@ -262,6 +271,7 @@ private:
 	bool _titlePeerTextOnline = false;
 	int _leftTaken = 0;
 	int _rightTaken = 0;
+	float64 _titleShownRatio = 1.;
 	bool _animatingMode = false;
 	std::unique_ptr<Ui::InfiniteRadialAnimation> _connecting;
 

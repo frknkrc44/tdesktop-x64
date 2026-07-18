@@ -45,7 +45,9 @@ public:
 		Fn<int()> contentWidth;
 		Fn<ChatPaintContext(QRect)> preparePaintContext;
 		Fn<QWidget*()> window;
-		Fn<not_null<ScrollArea*>()> scrollArea;
+		Fn<int()> scrollTop;
+		Fn<int()> scrollTopMax;
+		Fn<not_null<QWidget*>()> scrollWidget;
 		Fn<void(int scrollTop)> scrollToY;
 		Fn<void(std::vector<CollapseGap>)> setCollapseGaps;
 	};
@@ -99,6 +101,7 @@ private:
 
 	int _savedScrollTop = 0;
 	bool _restoreScrollPending = false;
+	bool _wasAtBottom = false;
 };
 
 } // namespace Ui
