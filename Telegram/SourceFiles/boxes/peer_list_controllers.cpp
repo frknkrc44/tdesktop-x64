@@ -53,10 +53,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h" // showAddContact()
 #include "base/unixtime.h"
 #include "styles/style_boxes.h"
-#include "styles/style_profile.h"
 #include "styles/style_dialogs.h"
 #include "styles/style_chat_helpers.h"
 #include "styles/style_menu_icons.h"
+#include "styles/style_premium.h"
 
 namespace {
 
@@ -1145,6 +1145,12 @@ auto ChooseRecipientBoxController::createRow(
 	auto result = std::make_unique<Row>(
 		history,
 		_moneyRestrictionError ? &computeListSt().item : nullptr);
+	if (const auto info = JoinedCommunityChats(peer)) {
+		result->setCustomStatus(tr::lng_community_chats(
+			tr::now,
+			lt_count,
+			int(info->histories().size())));
+	}
 	return result;
 }
 

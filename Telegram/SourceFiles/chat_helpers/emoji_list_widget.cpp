@@ -140,6 +140,7 @@ private:
 
 struct EmojiListWidget::CustomEmojiInstance {
 	std::unique_ptr<Ui::Text::CustomEmoji> emoji;
+	uint64 setId = 0;
 	bool recentOnly = false;
 };
 
@@ -1164,7 +1165,8 @@ void EmojiListWidget::fillCloudSearchResults() {
 			.custom = resolveCustomEmoji(
 				statusId,
 				document,
-				SearchEmojiSectionSetId()),
+				SearchEmojiSectionSetId(),
+				true),
 			.id = { RecentEmojiDocument{ .id = id, .test = test } },
 		});
 	}
@@ -1222,7 +1224,8 @@ bool EmojiListWidget::addSearchShortcut(not_null<Data::StickersSet*> set) {
 				.custom = resolveCustomEmoji(
 					EmojiStatusId{ document->id },
 					document,
-					set->id),
+					set->id,
+					true),
 				.document = document,
 				.emoji = Ui::Emoji::Find(sticker->alt),
 			});
@@ -1258,7 +1261,8 @@ std::vector<EmojiListWidget::CustomOne> EmojiListWidget::collectSearchSet(
 				.custom = resolveCustomEmoji(
 					statusId,
 					document,
-					set->id),
+					set->id,
+					true),
 				.document = document,
 				.emoji = Ui::Emoji::Find(sticker->alt),
 			});
@@ -1480,23 +1484,26 @@ void EmojiListWidget::setMarkedCustomIds(base::flat_set<DocumentId> ids) {
 }
 
 void EmojiListWidget::repaintCustom(uint64 setId) {
-	if (!_repaintsScheduled.emplace(setId).second) {
+	if (_repaintsScheduled.contains(setId)) {
 		return;
 	}
-	const auto repaintSearch = (setId == SearchEmojiSectionSetId());
+	auto scheduled = false;
 	if (_searchMode) {
-		if (repaintSearch) {
+		if (setId == SearchEmojiSectionSetId()) {
+			scheduled = true;
 			update();
 		} else {
 			for (auto i = 0, count = int(_searchShortcutSets.size());
 					i != count; ++i) {
 				if (_searchShortcutSets[i].id == setId) {
+					scheduled = true;
 					rtlupdate(searchShortcutRect(i));
 				}
 			}
 			enumerateSections([&](const SectionInfo &info) {
 				if (info.section > 0
 					&& searchSetBySection(info.section).id == setId) {
+					scheduled = true;
 					update(
 						0,
 						info.rowsTop,
@@ -1506,24 +1513,28 @@ void EmojiListWidget::repaintCustom(uint64 setId) {
 				return true;
 			});
 		}
-		return;
+	} else {
+		const auto repaintRecent = (setId == RecentEmojiSectionSetId());
+		enumerateSections([&](const SectionInfo &info) {
+			const auto repaint1 = repaintRecent
+				&& (info.section == int(Section::Recent));
+			const auto repaint2 = !repaint1
+				&& (info.section >= _staticCount)
+				&& (setId == _custom[info.section - _staticCount].id);
+			if (repaint1 || repaint2) {
+				scheduled = true;
+				update(
+					0,
+					info.rowsTop,
+					width(),
+					info.rowsBottom - info.rowsTop);
+			}
+			return true;
+		});
 	}
-	const auto repaintRecent = (setId == RecentEmojiSectionSetId());
-	enumerateSections([&](const SectionInfo &info) {
-		const auto repaint1 = repaintRecent
-			&& (info.section == int(Section::Recent));
-		const auto repaint2 = !repaint1
-			&& (info.section >= _staticCount)
-			&& (setId == _custom[info.section - _staticCount].id);
-		if (repaint1 || repaint2) {
-			update(
-				0,
-				info.rowsTop,
-				width(),
-				info.rowsBottom - info.rowsTop);
-		}
-		return true;
-	});
+	if (scheduled) {
+		_repaintsScheduled.emplace(setId);
+	}
 }
 
 rpl::producer<EmojiChosen> EmojiListWidget::chosen() const {
@@ -2302,11 +2313,20 @@ void EmojiListWidget::paintSearchShortcutIcon(
 		Painter &p,
 		const CustomSet &set,
 		QRect rect) {
-	if (set.list.empty() || _customSingleSize <= 0) {
+	if (set.list.empty()) {
 		return;
 	}
-	const auto native = _customSingleSize;
-	const auto scale = double(rect.width()) / double(native);
+	using SizeTag = Data::CustomEmojiManager::SizeTag;
+	const auto native = Data::FrameSizeFromTag(SizeTag::Isolated)
+		/ style::DevicePixelRatio();
+	if (!set.shortcutIcon) {
+		const auto document = set.list.front().document;
+		set.shortcutIcon = document->owner().customEmojiManager().create(
+			document,
+			[=] { update(); },
+			SizeTag::Isolated);
+	}
+	const auto scale = rect.width() / float64(native);
 	auto context = Ui::Text::CustomEmojiPaintContext{
 		.textColor = (_customTextColor
 			? _customTextColor()
@@ -2320,10 +2340,11 @@ void EmojiListWidget::paintSearchShortcutIcon(
 		.internal = { .forceFirstFrame = true },
 	};
 	p.save();
+	auto hq = PainterHighQualityEnabler(p);
 	p.translate(rect.center());
 	p.scale(scale, scale);
 	p.translate(-native / 2, -native / 2);
-	set.list.front().custom->paint(p, context);
+	set.shortcutIcon->paint(p, context);
 	p.restore();
 }
 
@@ -3558,7 +3579,7 @@ void EmojiListWidget::refreshCustom() {
 				continue;
 			} else if (const auto sticker = document->sticker()) {
 				set.push_back({
-					.custom = resolveCustomEmoji(id, document, lookupId),
+					.custom = resolveCustomEmoji(id, document, setId),
 					.document = document,
 					.emoji = Ui::Emoji::Find(sticker->alt),
 				});
@@ -3614,10 +3635,14 @@ void EmojiListWidget::refreshCustom() {
 }
 
 Fn<void()> EmojiListWidget::repaintCallback(
+		EmojiStatusId id,
 		DocumentId documentId,
 		uint64 setId) {
 	return [=] {
-		repaintCustom(setId);
+		const auto i = _customEmoji.find(id);
+		repaintCustom((i != end(_customEmoji) && !i->second.recentOnly)
+			? i->second.setId
+			: setId);
 		if (_recentCustomIds.contains(documentId)) {
 			repaintCustom(RecentEmojiSectionSetId());
 		}
@@ -3630,16 +3655,23 @@ Fn<void()> EmojiListWidget::repaintCallback(
 not_null<Ui::Text::CustomEmoji*> EmojiListWidget::resolveCustomEmoji(
 		EmojiStatusId id,
 		not_null<DocumentData*> document,
-		uint64 setId) {
+		uint64 setId,
+		bool search) {
 	const auto documentId = document->id;
 	const auto i = _customEmoji.find(id);
 	const auto recentOnly = (i != end(_customEmoji)) && i->second.recentOnly;
 	if (i != end(_customEmoji) && !recentOnly) {
+		// Search results reuse instances of normal sections, but they
+		// must not retarget the stored section id: it outlives the search
+		// and the search repaints are covered by _searchCustomIds checks.
+		if (!search) {
+			i->second.setId = setId;
+		}
 		return i->second.emoji.get();
 	}
 	auto instance = document->owner().customEmojiManager().create(
 		Data::EmojiStatusCustomId(id),
-		repaintCallback(documentId, setId),
+		repaintCallback(id, documentId, setId),
 		Data::CustomEmojiManager::SizeTag::Large);
 	if (recentOnly) {
 		for (auto &recent : _recent) {
@@ -3648,12 +3680,15 @@ not_null<Ui::Text::CustomEmoji*> EmojiListWidget::resolveCustomEmoji(
 			}
 		}
 		i->second.emoji = std::move(instance);
+		if (!search) {
+			i->second.setId = setId;
+		}
 		i->second.recentOnly = false;
 		return i->second.emoji.get();
 	}
 	return _customEmoji.emplace(
 		id,
-		CustomEmojiInstance{ .emoji = std::move(instance) }
+		CustomEmojiInstance{ .emoji = std::move(instance), .setId = setId }
 	).first->second.emoji.get();
 }
 
@@ -3688,7 +3723,10 @@ not_null<Ui::Text::CustomEmoji*> EmojiListWidget::resolveCustomRecent(
 	const auto documentId = id.collectible
 		? id.collectible->documentId
 		: id.documentId;
-	auto repaint = repaintCallback(documentId, RecentEmojiSectionSetId());
+	auto repaint = repaintCallback(
+		id,
+		documentId,
+		RecentEmojiSectionSetId());
 	if (_customRecentFactory && !id.collectible) {
 		return _customRecent.emplace(
 			id.documentId,
@@ -3701,7 +3739,11 @@ not_null<Ui::Text::CustomEmoji*> EmojiListWidget::resolveCustomRecent(
 		Data::CustomEmojiManager::SizeTag::Large);
 	return _customEmoji.emplace(
 		id,
-		CustomEmojiInstance{ .emoji = std::move(custom), .recentOnly = true }
+		CustomEmojiInstance{
+			.emoji = std::move(custom),
+			.setId = RecentEmojiSectionSetId(),
+			.recentOnly = true,
+		}
 	).first->second.emoji.get();
 }
 

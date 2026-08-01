@@ -66,6 +66,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_account.h"
 #include "styles/style_chat.h"
 #include "styles/style_chat_helpers.h"
+#include "styles/style_chat_style.h"
 #include "styles/style_dialogs.h"
 #include "window/window_peer_menu.h"
 #include "styles/style_iv.h"
@@ -2183,6 +2184,10 @@ void Message::draw(Painter &p, const PaintContext &context) const {
 
 	if (hasGesture) {
 		p.translate(-context.gestureHorizontal.translation, 0);
+		if (context.reactionInfo && context.reactionInfo->effectPaint) {
+			const auto shift = context.gestureHorizontal.translation;
+			context.reactionInfo->effectOffset += QPoint(shift, 0);
+		}
 
 		constexpr auto kShiftRatio = 1.5;
 		constexpr auto kBouncePart = 0.25;
@@ -4729,7 +4734,10 @@ void Message::updatePressed(QPoint point) {
 	}
 }
 
-bool Message::consumeHorizontalScroll(QPoint position, int delta) {
+bool Message::consumeHorizontalScroll(
+		QPoint position,
+		int delta,
+		Qt::ScrollPhase phase) {
 	const auto rich = richpage();
 	auto trect = QRect();
 	if (!rich || !prepareRichPageTextRect(trect)) {
@@ -4737,7 +4745,8 @@ bool Message::consumeHorizontalScroll(QPoint position, int delta) {
 	}
 	return rich->article.consumeHorizontalScroll(
 		prepareRichPageStateRect(position, trect),
-		delta);
+		delta,
+		phase);
 }
 
 bool Message::canConsumeHorizontalScroll(QPoint position, int delta) const {

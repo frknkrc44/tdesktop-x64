@@ -43,8 +43,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_star_gift.h"
 #include "data/data_stories.h"
 #include "data/data_user.h"
-#include "data/notify/data_notify_settings.h"
-#include "data/notify/data_peer_notify_settings.h"
 #include "data/stickers/data_custom_emoji.h"
 #include "editor/photo_editor_common.h"
 #include "editor/photo_editor_layer_widget.h"
@@ -101,13 +99,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h"
 #include "ui/toast/toast.h"
 #include "boxes/sticker_set_box.h"
-#include "styles/style_boxes.h"
-#include "styles/style_chat_helpers.h"
 #include "styles/style_chat.h"
 #include "styles/style_info.h"
+#include "styles/style_info_profile_top_bar.h"
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
-#include "styles/style_settings.h"
 
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -158,7 +154,6 @@ constexpr auto kMinContrast = 5.5;
 constexpr auto kStoryOutlineFadeEnd = 0.4;
 constexpr auto kStoryOutlineFadeRange = 1. - kStoryOutlineFadeEnd;
 constexpr auto kSwapMoveAmplitude = 0.3;
-constexpr auto kStandaloneGroupProgress = 0.5;
 
 using AnimatedPatternPoint = TopBar::AnimatedPatternPoint;
 
@@ -984,38 +979,26 @@ void TopBar::setupActions(not_null<Window::SessionController*> controller) {
 		notifications->finishAnimating();
 
 		notifications->setAcceptBoth();
-		const auto notifySettings = &peer->owner().notifySettings();
-			MuteMenu::SetupMuteMenu(
-				notifications,
-				notifications->clicks(
-				) | rpl::filter([=](Qt::MouseButton button) {
-					if (button == Qt::RightButton) {
-						return true;
-					}
-					const auto topic = topicRootId
-						? peer->forumTopicFor(topicRootId)
-						: nullptr;
-					Assert(!topicRootId || topic != nullptr);
-					const auto is = topic
-						? notifySettings->isMuted(topic)
-						: notifySettings->isMuted(peer);
-					if (is) {
-						if (topic) {
-							notifySettings->update(topic, { .unmute = true });
-						} else {
-							notifySettings->update(peer, { .unmute = true });
-						}
-						return false;
-					} else {
-						return true;
-					}
-				}) | rpl::to_empty,
-				makeThread,
-				controller->uiShow(),
-				[=, skip = st::infoProfileTopBarActionMenuSkip] {
-					return notifications->mapToGlobal(
-						QPoint(0, notifications->height() + skip));
-				});
+		notifications->clicks(
+		) | rpl::filter([](Qt::MouseButton button) {
+			return (button == Qt::LeftButton);
+		}) | rpl::on_next([=] {
+			if (const auto thread = makeThread()) {
+				MuteMenu::ToggleMuteForever(thread);
+			}
+		}, notifications->lifetime());
+		MuteMenu::SetupMuteMenu(
+			notifications,
+			notifications->clicks(
+			) | rpl::filter([](Qt::MouseButton button) {
+				return (button == Qt::RightButton);
+			}) | rpl::to_empty,
+			makeThread,
+			controller->uiShow(),
+			[=, skip = st::infoProfileTopBarActionMenuSkip] {
+				return notifications->mapToGlobal(
+					QPoint(0, notifications->height() + skip));
+			});
 		buttons.push_back(notifications);
 		_actions->add(notifications);
 		_edgeColor.value() | rpl::on_next([=](
@@ -2086,11 +2069,13 @@ void TopBar::applyTabBindings(TabTopBarBindings &&bindings) {
 void TopBar::setupStandaloneGroupControl(
 		rpl::producer<bool> state,
 		rpl::producer<bool> available,
+		rpl::producer<bool> reached,
 		Fn<void(bool)> toggle) {
 	_standaloneGroup = true;
 	_tabSetGroup = std::move(toggle);
 	_tabGroupActive = false;
 	_tabGroupAvailable = false;
+	_standaloneGroupReached = false;
 	std::move(
 		state
 	) | rpl::on_next([=](bool grouped) {
@@ -2104,8 +2089,10 @@ void TopBar::setupStandaloneGroupControl(
 		_tabGroupAvailable = value;
 		updateTabSwapVisibility();
 	}, lifetime());
-	_progress.changes(
-	) | rpl::on_next([=] {
+	std::move(
+		reached
+	) | rpl::on_next([=](bool value) {
+		_standaloneGroupReached = value;
 		updateTabSwapVisibility();
 	}, lifetime());
 	updateTabGroupActive();
@@ -2509,10 +2496,10 @@ void TopBar::updateTabSwapVisibility() {
 		}
 	}
 	if (_tabGroupToggle) {
-		const auto collapsed = _standaloneGroup
-			? (_progress.current() < kStandaloneGroupProgress)
+		const auto reached = _standaloneGroup
+			? _standaloneGroupReached
 			: swap;
-		const auto shown = collapsed
+		const auto shown = reached
 			&& !_tabSearchShown
 			&& (_tabSetGroup != nullptr)
 			&& _tabGroupAvailable;
