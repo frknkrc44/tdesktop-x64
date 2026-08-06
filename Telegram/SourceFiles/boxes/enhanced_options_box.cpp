@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/widgets/labels.h"
 #include "styles/style_layers.h"
 #include "styles/style_boxes.h"
+#include "styles/style_passcode_box.h"
 #include "ui/boxes/confirm_box.h"
 #include "core/application.h"
 #include "core/enhanced_settings.h"

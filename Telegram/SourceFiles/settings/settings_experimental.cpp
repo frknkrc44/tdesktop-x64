@@ -447,6 +447,7 @@ void SetupExperimental(
 				Core::kOptionFractionalScalingEnabled,
 				Core::kOptionHighDpiDownscale,
 				Ui::GL::kOptionUseQtRhi,
+				Ui::GL::kOptionEnableVulkanRhi,
 				Core::kOptionFreeType,
 				Ui::kOptionQScroller,
 				Window::kOptionDisableTouchbar,
@@ -522,7 +523,7 @@ void SetupExperimental(
 		if (base::options::lookup<bool>(kOptionFastButtonsMode).value()) {
 			searchable.push_back(addOption(inner, kOptionFastButtonsMode));
 		}
-		searchable.push_back(addToggle(Ui::kOptionUncoloredQuote));
+		// searchable.push_back(addToggle(Ui::kOptionUncoloredQuote));
 		searchable.push_back(AddFavoriteLinkButton(
 			window,
 			inner,

@@ -5405,6 +5405,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_context_delete_selected" = "Delete Selected";
 "lng_context_save_images_selected" = "Save Selected";
 "lng_context_save_documents_selected" = "Download Selected";
+"lng_context_save_html" = "Save as HTML";
 "lng_context_clear_selection" = "Clear Selection";
 "lng_context_seen_loading" = "Loading...";
 "lng_context_seen_text#one" = "{count} Seen";
@@ -6079,6 +6080,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_mediaview_saved_images_to" = "Images were saved to your {downloads} folder";
 "lng_mediaview_video_saved_to" = "Video file was saved to your {downloads} folder";
 "lng_mediaview_downloads" = "Downloads";
+"lng_export_html_saved_to" = "Message was saved to your {downloads} folder";
+"lng_export_html_failed" = "Could not save the message as HTML.";
+"lng_export_html_media_missing" = "Media unavailable";
+"lng_export_html_embed" = "Embedded content";
 "lng_mediaview_playback_speed" = "Playback speed: {speed}";
 "lng_mediaview_rotate_video" = "Rotate video";
 "lng_mediaview_quality_auto" = "Auto";
@@ -7481,6 +7486,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_article_limit_blocks" = "The article has too many blocks.";
 "lng_article_limit_columns" = "The article table has too many columns.";
 "lng_article_limit_media" = "The article has too many media files.";
+"lng_article_table_truncated" = "The pasted table didn't fit and was truncated.";
+"lng_article_paste_truncated" = "The pasted content didn't fit and was truncated.";
 "lng_article_submit_empty" = "The article can't be empty.";
 "lng_article_premium_required" = "Subscribe to {link} to be able to send rich articles.";
 "lng_article_premium_required_link" = "Telegram Premium";
@@ -7814,6 +7821,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_photo_editor_corners_medium" = "Medium";
 "lng_photo_editor_corners_small" = "Small";
 "lng_photo_editor_corners_none" = "None";
+"lng_photo_editor_keep_ratio" = "Keep original aspect ratio";
 
 "lng_photo_editor_shape_circle" = "Circle";
 "lng_photo_editor_shape_rectangle" = "Rectangle";
@@ -8502,6 +8510,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_ai_compose_select_style" = "Select Style";
 "lng_ai_compose_apply_style" = "Apply Style";
 "lng_ai_compose_style_tooltip" = "Choose Style";
+"lng_ai_compose_style_prompt_placeholder" = "Write a prompt...";
 "lng_ai_compose_create_tone_title" = "New Style";
 "lng_ai_compose_edit_tone_title" = "Edit Style";
 "lng_ai_compose_create_title" = "Create with AI";

@@ -193,6 +193,7 @@ public:
 	void requestContacts();
 	void requestDialogs(Data::Folder *folder = nullptr);
 	void requestPinnedDialogs(Data::Folder *folder = nullptr);
+	void reloadPinnedDialogs(Data::Folder *folder = nullptr);
 	void requestMoreBlockedByDateDialogs();
 	void requestMoreDialogsIfNeeded();
 	rpl::producer<bool> dialogsLoadMayBlockByDate() const;
@@ -511,6 +512,9 @@ private:
 		const QVector<MTPDialog> &dialogs,
 		const QVector<MTPMessage> &messages);
 	void requestMoreDialogs(Data::Folder *folder);
+	mtpRequestId sendPinnedDialogsRequest(
+		Data::Folder *folder,
+		Fn<void()> finish);
 	DialogsLoadState *dialogsLoadState(Data::Folder *folder);
 	void dialogsLoadFinish(Data::Folder *folder);
 
@@ -767,6 +771,7 @@ private:
 	base::flat_map<
 		not_null<Data::Folder*>,
 		DialogsLoadState> _foldersLoadState;
+	base::flat_set<Data::Folder*> _pinnedDialogsReloads;
 
 	rpl::event_stream<SendAction> _sendActions;
 
