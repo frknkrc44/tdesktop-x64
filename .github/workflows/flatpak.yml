@@ -1,4 +1,5 @@
 name: Flatpak Packager
+
 on:
   workflow_dispatch: null
   workflow_run:
@@ -6,6 +7,7 @@ on:
       - Linux Build
     types:
       - completed
+
 jobs:
   flatpak:
     name: Package 64Gram
@@ -17,17 +19,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
       - name: Checkout Repository Assets
         uses: actions/checkout@v6
+
       - name: Download Latest Binary Artifact
         uses: dawidd6/action-download-artifact@v20
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          repo: frknkrc44/tdesktop-x64
+          repo: ${{ github.repository }}
           workflow: linux.yml
           workflow_conclusion: success
-          name: Telegram
+          name: Telegram-Desktop
           path: bin_archive
+
       - name: Prepare Assets
         run: |
           cat <<EOT > org.frknkrc44.Telegram.desktop
@@ -45,6 +50,7 @@ jobs:
           StartupWMClass=Telegram
           MimeType=x-scheme-handler/tg;
           EOT
+
       - name: Create Flatpak Manifest
         run: |
           cat <<EOF > org.frknkrc44.Telegram.yml
@@ -86,10 +92,12 @@ jobs:
                 - type: file
                   path: org.frknkrc44.Telegram.desktop
           EOF
+
       - name: Build Flatpak Bundle
         run: |
           flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir org.frknkrc44.Telegram.yml
           flatpak build-bundle repo 64Gram-fork.flatpak org.frknkrc44.Telegram
+
       - name: Upload Final Flatpak
         uses: actions/upload-artifact@v7
         with:
