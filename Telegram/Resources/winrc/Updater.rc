@@ -35,8 +35,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 7,0,9,0
- PRODUCTVERSION 7,0,9,0
+ FILEVERSION 7,1,0,0
+ PRODUCTVERSION 7,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -51,12 +51,30 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
+<<<<<<< HEAD
             VALUE "CompanyName", "64Gram"
             VALUE "FileDescription", "64Gram Desktop Updater"
-            VALUE "FileVersion", "7.0.9.0"
+            VALUE "FileVersion", "7.1.0.0"
+||||||| a1e89e1f64
+            VALUE "CompanyName", "Telegram FZ-LLC"
+            VALUE "FileDescription", "Telegram Desktop Updater"
+            VALUE "FileVersion", "7.1.0.0"
+=======
+            VALUE "CompanyName", "Telegram FZ-LLC"
+            VALUE "FileDescription", "Telegram Desktop Updater"
+            VALUE "FileVersion", "7.1.0.0"
+>>>>>>> 26ba2856b27a238fc1218940b417f120479ab2f0
             VALUE "LegalCopyright", "Copyright (C) 2014-2026"
+<<<<<<< HEAD
             VALUE "ProductName", "64Gram Desktop"
-            VALUE "ProductVersion", "7.0.9.0"
+            VALUE "ProductVersion", "7.1.0.0"
+||||||| a1e89e1f64
+            VALUE "ProductName", "Telegram Desktop"
+            VALUE "ProductVersion", "7.1.0.0"
+=======
+            VALUE "ProductName", "Telegram Desktop"
+            VALUE "ProductVersion", "7.1.0.0"
+>>>>>>> 26ba2856b27a238fc1218940b417f120479ab2f0
         END
     END
     BLOCK "VarFileInfo"
