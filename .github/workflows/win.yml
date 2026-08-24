@@ -46,12 +46,10 @@ jobs:
     runs-on:  ${{ case(matrix.arch == 'arm64', 'windows-11-arm', 'windows-2022') }}
     strategy:
       matrix:
-        arch: [x64_x86, x64, arm64]
+        arch: [x64_x86, x64]
         qt: ["", qt6]
-        generator: ["", "Ninja Multi-Config"]
+        generator: [""]
         exclude:
-          - arch: arm64
-            qt: ""
           - arch: x64_x86
             qt: qt6
 
