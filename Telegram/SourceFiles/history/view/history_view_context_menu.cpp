@@ -1969,6 +1969,7 @@ template <typename Menu>
 }
 
 [[nodiscard]] bool ShowReactionPreviewMenu(
+		QPoint position,
 		not_null<QWidget*> context,
 		not_null<HistoryItem*> item,
 		const Data::ReactionId &id,
@@ -2031,7 +2032,7 @@ template <typename Menu>
 				appendBottom);
 			refreshGeometry();
 		}, menu->lifetime());
-	});
+	}, position);
 }
 
 } // namespace
@@ -3113,7 +3114,12 @@ void ShowWhoReactedMenu(
 	if (item->reactionsAreTags()) {
 		ShowTagMenu(menu, position, context, item, id, controller);
 		return;
-	} else if (ShowReactionPreviewMenu(context, item, id, controller)) {
+	} else if (ShowReactionPreviewMenu(
+			position,
+			context,
+			item,
+			id,
+			controller)) {
 		return;
 	}
 

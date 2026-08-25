@@ -21,6 +21,7 @@ struct WhoReadList;
 
 namespace Data {
 class ForumTopic;
+class SavedMessages;
 class SavedSublist;
 } // namespace Data
 
@@ -83,6 +84,7 @@ public:
 	explicit Key(not_null<PeerData*> peer);
 	explicit Key(not_null<Data::ForumTopic*> topic);
 	explicit Key(not_null<Data::SavedSublist*> sublist);
+	explicit Key(not_null<Data::SavedMessages*> savedMessages);
 	Key(Settings::Tag settings);
 	Key(Downloads::Tag downloads);
 	Key(Stories::Tag stories);
@@ -100,6 +102,7 @@ public:
 	[[nodiscard]] PeerData *peer() const;
 	[[nodiscard]] Data::ForumTopic *topic() const;
 	[[nodiscard]] Data::SavedSublist *sublist() const;
+	[[nodiscard]] Data::SavedMessages *savedMessages() const;
 	[[nodiscard]] UserData *settingsSelf() const;
 	[[nodiscard]] bool isDownloads() const;
 	[[nodiscard]] bool isGlobalMedia() const;
@@ -134,6 +137,7 @@ private:
 		not_null<PeerData*>,
 		not_null<Data::ForumTopic*>,
 		not_null<Data::SavedSublist*>,
+		not_null<Data::SavedMessages*>,
 		Settings::Tag,
 		Downloads::Tag,
 		Stories::Tag,

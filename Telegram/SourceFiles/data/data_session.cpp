@@ -372,9 +372,11 @@ Session::Session(not_null<Main::Session*> session)
 		notifyUnreadBadgeChanged();
 	}, _lifetime);
 
-	base::options::lookup<bool>(
-		Dialogs::kOptionDialogsUnreadOnTop
-	).changes() | rpl::on_next([=] {
+	const auto &unreadOnTop = base::options::lookup<bool>(
+		Dialogs::kOptionDialogsUnreadOnTop);
+	_dialogsUnreadOnTop = unreadOnTop.value();
+	unreadOnTop.changes() | rpl::on_next([=, &unreadOnTop] {
+		_dialogsUnreadOnTop = unreadOnTop.value();
 		refreshChatListUnreadOnTop();
 	}, _lifetime);
 
@@ -5698,9 +5700,9 @@ void Session::refreshChatListEntry(Dialogs::Key key) {
 		if (!id) {
 			continue;
 		}
-		const auto filterList = chatsFilters().chatsList(id);
 		auto event = ChatListEntryRefresh{ .key = key, .filterId = id };
 		if (filter.contains(history)) {
+			const auto filterList = chatsFilters().chatsList(id);
 			event.existenceChanged = !entry->inChatList(id);
 			if (event.existenceChanged) {
 				entry->addToChatList(id, filterList);
@@ -5708,7 +5710,7 @@ void Session::refreshChatListEntry(Dialogs::Key key) {
 				event.moved = entry->adjustByPosInChatList(id, filterList);
 			}
 		} else if (entry->inChatList(id)) {
-			entry->removeFromChatList(id, filterList);
+			entry->removeFromChatList(id, chatsFilters().chatsList(id));
 			event.existenceChanged = true;
 		}
 		if (event) {
