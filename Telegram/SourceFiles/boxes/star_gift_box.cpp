@@ -4434,7 +4434,7 @@ void SubmitTonForm(
 				Ui::InsufficientTonBox,
 				session,
 				ton));
-			if (const auto strong = weak.get()) {
+			if (const auto strong = weak.data()) {
 				strong->boxClosing() | rpl::on_next(
 					cancel,
 					strong->lifetime());
