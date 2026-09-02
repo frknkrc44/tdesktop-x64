@@ -282,7 +282,6 @@ rpl::producer<Provider::SliceUpdate> Provider::source(
 			if (_generation != generation || _totalListQuery != query) {
 				return;
 			}
-			const auto list = listForQuery(query);
 			auto result = fillRequest(
 				query,
 				aroundId,
@@ -290,16 +289,29 @@ rpl::producer<Provider::SliceUpdate> Provider::source(
 				limitAfter);
 
 			// May destroy 'state' by calling source() with different args.
+			// 'state' owns this lambda, so every capture, 'guard' included,
+			// would be read from freed memory afterwards. Keep the ones
+			// used below on the stack.
+			const auto that = this;
+			const auto weak = guard;
+			const auto pushedQuery = query;
+			const auto pushedGeneration = generation;
+
 			consumer.put_next(SliceUpdate{
 				query,
 				generation,
 				std::move(result.slice),
 			});
 
-			if (guard && !list->loaded && result.notEnough) {
-				requestMore(query, generation, [guard] {
-					if (guard) {
-						guard->pushAndLoadMore();
+			if (!weak) {
+				return;
+			}
+			// The list could have been rehashed inside put_next().
+			const auto list = that->listForQuery(pushedQuery);
+			if (!list->loaded && result.notEnough) {
+				that->requestMore(pushedQuery, pushedGeneration, [weak] {
+					if (weak) {
+						weak->pushAndLoadMore();
 					}
 				});
 			}
@@ -588,9 +600,17 @@ GlobalMediaKey Provider::sliceKey(Data::MessagePosition aroundId) const {
 
 void Provider::itemRemoved(not_null<const HistoryItem*> item) {
 	const auto id = item->fullId();
-	if (const auto i = _layouts.find(id); i != end(_layouts)) {
-		_layoutRemoved.fire(i->second.item.get());
-		_layouts.erase(i);
+	const auto i = _layouts.find(id);
+	if (i == end(_layouts)) {
+		return;
+	}
+	_layoutRemoved.fire(i->second.item.get());
+	// The list widget handles layoutRemoved() synchronously and may
+	// refresh its height from there, which can reach refreshViewer()
+	// -> refreshRows() -> fillSections() -> clearStaleLayouts() before
+	// we get back here, erasing this very entry, so look it up again.
+	if (const auto j = _layouts.find(id); j != end(_layouts)) {
+		_layouts.erase(j);
 	}
 }
 

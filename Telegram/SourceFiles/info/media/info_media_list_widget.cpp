@@ -164,6 +164,8 @@ ListWidget::ListWidget(
 : RpWidget(parent)
 , _controller(controller)
 , _provider(MakeProvider(_controller))
+, _sectionsSortedById(!controller->isDownloads()
+	&& !controller->isGlobalMedia())
 , _checkMoveToOtherViewer([=] { checkMoveToOtherViewer(); })
 , _rowsScrollCache([=] { update(); })
 , _dateBadge(std::make_unique<DateBadge>(
@@ -1661,14 +1663,21 @@ void ListWidget::showContextMenu(
 		}
 		if (const auto peer = _controller->key().storiesPeer()) {
 			if (!peer->isSelf() && IsStoryMsgId(globalId.itemId.msg)) {
-				::Media::Stories::AddStealthModeMenu(
-					Ui::Menu::CreateAddActionCallback(_contextMenu),
-					peer,
-					_controller->parentController());
 				const auto storyId = FullStoryId{
 					globalId.itemId.peer,
 					StoryIdFromMsgId(globalId.itemId.msg),
 				};
+				const auto albumId = _controller->storiesAlbumId();
+				::Media::Stories::AddStealthModeMenu(
+					Ui::Menu::CreateAddActionCallback(_contextMenu),
+					peer,
+					_controller->parentController(),
+					crl::guard(this, [=] {
+						_controller->parentController()->openPeerStory(
+							peer,
+							storyId.story,
+							{ Data::StoriesContextAlbum{ albumId } });
+					}));
 				_contextMenu->addAction(
 					tr::lng_profile_report(tr::now),
 					[=] { ::Media::Stories::ReportRequested(
@@ -2656,7 +2665,7 @@ std::vector<ListSection>::iterator ListWidget::findSectionByItem(
 	if (_sections.size() < 2) {
 		return _sections.begin();
 	}
-	Assert(!_controller->isDownloads() && !_controller->isGlobalMedia());
+	Assert(_sectionsSortedById);
 	return ranges::lower_bound(
 		_sections,
 		GetUniversalId(item),

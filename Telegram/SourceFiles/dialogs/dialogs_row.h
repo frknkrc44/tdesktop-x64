@@ -42,7 +42,7 @@ enum class SortMode;
 [[nodiscard]] QRect CornerBadgeTTLRect(int photoSize);
 [[nodiscard]] QImage BlurredDarkenedPart(QImage image, QRect part);
 
-class BasicRow {
+class BasicRow : public base::has_weak_ptr {
 public:
 	BasicRow();
 	virtual ~BasicRow();
@@ -226,7 +226,7 @@ private:
 
 };
 
-class FakeRow final : public BasicRow, public base::has_weak_ptr {
+class FakeRow final : public BasicRow {
 public:
 	FakeRow(
 		Key searchInChat,

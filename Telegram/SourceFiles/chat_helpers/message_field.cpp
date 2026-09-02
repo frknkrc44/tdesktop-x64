@@ -1684,3 +1684,9 @@ Ui::InputField::MimeDataHook WrappedMessageFieldMimeHook(
 		return originalHook ? originalHook(data, action) : false;
 	};
 }
+
+bool PasteAsPlainTextRequested() {
+	const auto modifiers = QGuiApplication::keyboardModifiers();
+	return (modifiers & Qt::ControlModifier)
+		&& (modifiers & Qt::ShiftModifier);
+}

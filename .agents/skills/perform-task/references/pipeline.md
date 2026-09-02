@@ -368,10 +368,31 @@ affected by the task.
 
 ### Initial review fanout
 
-The initial review always includes one independent **general** reviewer and all
-five standard lenses. Start them together when capacity permits; under a slot
-limit, keep the complete set queued and start the next lens as soon as a slot
-opens. The general reviewer and lenses do not read one another's findings.
+The initial review of a task **that produced a source diff** includes one
+independent **general** reviewer and all five standard lenses. Start them
+together when capacity permits; under a slot limit, keep the complete set
+queued and start the next lens as soon as a slot opens. The general reviewer
+and lenses do not read one another's findings.
+
+A task on the `already-satisfied` path has no diff, and the fanout does not
+apply to it — see `### Already-satisfied outcome`. Review exists to judge code
+this task wrote; where it wrote none, the general reviewer alone confirms the
+current code and the evidence contract, and a lens runs only when the existing
+subject named in assessment needs its risk-specific judgement. Do not convene
+lenses to review a measurement contract. A defective oracle is not a review
+finding: it fails or vacuously passes its own check, and the evidence loop
+repairs it in place, which is cheaper and more reliable than a review round
+arguing about it in advance.
+
+Bound that path hard. One review round decides it. If the general reviewer
+requires changes, make them and re-review only what changed; a second required-
+changes verdict whose findings are all in the measurement contract ends the
+review and hands the remaining items to the evidence loop as check repairs. A
+verification task must never run a third review round, and never a convergence
+assessment on a contract it can simply execute. The cost of getting this wrong
+is not theoretical: a no-diff task that runs the full fanout to convergence
+spends hours reviewing a test design before taking a single measurement, and
+ends where it began — with the code unchanged and the behaviour confirmed.
 
 The general reviewer reads every changed file in full and owns correctness,
 completeness, adjacent integration, unintended regressions, proportionality,
@@ -547,8 +568,17 @@ When inspection finds the requested outcome already present, do not manufacture
 a source edit. Assessment records that candidate outcome and designs direct
 evidence. The mandatory general review independently confirms the relevant
 current code and the evidence contract; specialists run only when the existing
-subject needs their risk-specific judgement. Run the ordinary evidence loop
-against `RUN_REF == BASE_REF`.
+subject needs their risk-specific judgement, and the initial five-lens fanout
+does not run at all. Run the ordinary evidence loop against
+`RUN_REF == BASE_REF`.
+
+A task expected to land here — anything whose job is to verify code that
+already shipped — spends its budget on measuring, not on deliberating. Get to
+the first run quickly: a proportionate plan, one general review, then execute.
+The single review round bound in `### Initial review fanout` governs; the
+adaptive machinery for sizing an implementation's risk has no subject here,
+because nothing is being implemented. If measurement is cheap enough to take,
+taking it always beats reasoning about whether it would pass.
 
 Approval without a source commit requires all of:
 
@@ -829,12 +859,42 @@ context, branch, overlay and build before it can measure what this process is
 already holding, so writing one you could have closed trades minutes for days.
 
 What legitimately belongs here is a gap this checkout cannot close: one that
-needs another platform or architecture, a second account, funded external
-value, real server-backed cloud state, a purpose-built bot, or hardware this
-machine does not have. Write it to be
+needs a second account, funded external value, real server-backed cloud state,
+a purpose-built bot, or hardware this machine does not have. Write it to be
 routable — the exact behavior that shipped without verification, and precisely
 what closing it would require — so the scheduler can record it rather than
 queueing work that would be unstartable the moment it entered the queue.
+
+Another platform or architecture qualifies only when the diff carries
+non-trivial platform-specific code *and* you can state a concrete reason to
+suspect that platform gets it wrong. Having executed on one host is not itself
+a gap, and neither is the bare existence of a platform-specific surface.
+Portable C++, localization values, layout and styling, and pure logic behave
+the same everywhere the project builds, so one green run on any capable host
+verifies them and this line reads `none`. Name the mechanism and the suspicion
+before writing a platform exposure, and only these count:
+
+- code under `#ifdef` or a platform API, including a platform-specific
+  implementation of a portable interface;
+- filesystem path semantics, case sensitivity, file locking, permissions;
+- process, thread, or event-loop ordering, including teardown and shutdown;
+- anything the task's acceptance criteria state per platform.
+
+Whether the change still compiles and links on another platform is never such
+a gap. Every platform is built and tested before anything merges to `dev` or
+ships, and a build or link break is loud, immediate and free to find: the
+compiler names the file and the line the first time that platform builds.
+An `Unverified:` line for it buys a multi-hour task to learn what the next
+build reports in seconds. This holds for a dependency or submodule pin that
+another platform's toolchain consumes, for compiler flags and the diagnostics
+they enable, for CMake platform branches, and for ABI and symbol resolution.
+Say what moved in the result prose if it is worth saying; do not write it here.
+
+A diff with none of these is verified once. Do not write a platform exposure
+for it, and never write one merely because a batch plan named a host other
+than the one that claimed the task. Cross-platform code is verified once,
+approved, and left alone; a second host re-measuring the same portable
+mechanism buys no evidence and costs a whole task.
 
 Scope it to this task's own change, with its acceptance criteria as the boundary.
 `Unverified:` is for behavior **this diff** shipped without proof — apply the same
