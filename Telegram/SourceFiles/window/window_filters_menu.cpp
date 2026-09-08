@@ -12,7 +12,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h"
 #include "window/window_controller.h"
 #include "window/window_main_menu.h"
-#include "window/window_peer_menu.h"
 #include "window/window_filters_favorite.h"
 #include "main/main_session.h"
 #include "base/event_filter.h"
@@ -717,7 +716,7 @@ base::unique_qptr<Ui::SideBarButton> FiltersMenu::prepareButton(
 			}
 		}
 	});
-	if (id > 0) {
+	if (id >= 0) {
 		raw->setAcceptDrops(true);
 		raw->events(
 		) | rpl::filter([=](not_null<QEvent*> e) {
@@ -749,30 +748,7 @@ base::unique_qptr<Ui::SideBarButton> FiltersMenu::prepareButton(
 			}
 		}, raw->lifetime());
 	}
-	// Mark all chats as read
-	if (id == 0) {
-		raw->events(
-		) | rpl::filter([=](not_null<QEvent*> e) {
-			return e->type() == QEvent::ContextMenu;
-		}) | rpl::on_next([=] {
-			_popupMenu = base::make_unique_q<Ui::PopupMenu>(
-				raw,
-				st::popupMenuWithIcons);;
-			const auto addAction = Window::PeerMenuCallback([&](
-					Window::PeerMenuCallback::Args args) {
-				return _popupMenu->addAction(
-					args.text,
-					crl::guard(&_outer, std::move(args.handler)),
-					args.icon);
-			});
-			Window::MenuAddMarkAsReadAllChatsAction(
-					&_session->session(),
-					_session->uiShow(),
-					addAction);
-			_popupMenu->popup(QCursor::pos());
-		}, raw->lifetime());
-	}
-
+	
 	// -1 means the "Edit" button
 	if (id == -1 && GetEnhancedBool("replace_edit_button")) {
 		raw->setAcceptDrops(true);
