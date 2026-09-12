@@ -2237,7 +2237,6 @@ void Message::draw(Painter &p, const PaintContext &context) const {
 			}
 		}
 	}
-<<<<<<< HEAD
 
 	if (GetEnhancedBool("screenshot_mode") != _previousMode) {
 		_previousMode = GetEnhancedBool("screenshot_mode"); // Update the previous mode
