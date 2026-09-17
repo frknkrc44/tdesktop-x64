@@ -259,7 +259,9 @@ void FiltersMenu::scrollToButton(not_null<Ui::RpWidget*> widget) {
 	const auto scrollTo = scrollTop + (isBottomEdge ? localBottom : localTop);
 
 	auto scroll = [=] {
-		_scroll.scrollToY(qRound(_scrollToAnimation.value(scrollTo)));
+		const auto animated
+			= int(base::SafeRound(_scrollToAnimation.value(scrollTo)));
+		_scroll.scrollToY(animated);
 	};
 
 	_scrollToAnimation.start(
@@ -843,6 +845,7 @@ void FiltersMenu::showMenu(QPoint position, FilterId id) {
 		};
 		MarkAsReadMenu::AddChatListAction(
 			_session,
+			MarkAsReadMenu::ChatListKind::Folder,
 			std::move(filteredChats),
 			addAction);
 
@@ -855,17 +858,11 @@ void FiltersMenu::showMenu(QPoint position, FilterId id) {
 			.isAttention = true,
 		});
 	} else {
-		auto customUnreadState = [=] {
-			const auto session = &_session->session();
-			return Data::MainListMapUnreadState(
-				session,
-				session->data().chatsList()->unreadState());
-		};
 		MarkAsReadMenu::AddChatListAction(
 			_session,
+			MarkAsReadMenu::ChatListKind::AllChats,
 			[=] { return _session->session().data().chatsList(); },
-			addAction,
-			std::move(customUnreadState));
+			addAction);
 
 		addAction(
 			tr::lng_filters_setup_menu(tr::now),
