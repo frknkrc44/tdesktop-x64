@@ -44,7 +44,7 @@ Then your language translation filename is `de.json` or something like that.
 ***Note: Ignore base ID(base ID translation - Work in progress)***
 
 <details>
-<summary><b>Libraries used in this project</b></summary>
+<summary><h2>Libraries used in this project</h2></summary>
 
 - Qt 6 ([LGPL](http://doc.qt.io/qt-6/lgpl.html)) and Qt 5.15 ([LGPL](http://doc.qt.io/qt-5/lgpl.html)) slightly patched
 - OpenSSL 3.2.1 ([Apache License 2.0](https://openssl-library.org/source/license/apache-license-2.0.txt))
