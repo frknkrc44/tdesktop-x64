@@ -511,7 +511,7 @@ void InnerWidget::saveState(not_null<Memento*> memento) {
 		memento->setMembersState(_members->saveState());
 	}
 	if (_tabsHost) {
-		memento->setActiveTab(_tabsHost->activeId());
+		memento->setTabsState(_tabsHost->saveState());
 	}
 }
 
@@ -523,9 +523,7 @@ void InnerWidget::restoreState(not_null<Memento*> memento) {
 		_sharedMediaWrap->finishAnimating();
 	}
 	if (_tabsHost) {
-		if (const auto active = memento->activeTab(); !active.isEmpty()) {
-			_tabsHost->restoreActiveTab(active);
-		}
+		_tabsHost->restoreState(memento->tabsState());
 	}
 }
 
