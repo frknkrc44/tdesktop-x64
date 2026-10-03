@@ -1,4 +1,8 @@
-name: MacOS.
+name: MacOS
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   push:
@@ -127,8 +131,7 @@ jobs:
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON \
           -D DESKTOP_APP_DISABLE_CRASH_REPORTS=OFF \
           -D TDESKTOP_API_ID=${{ secrets.TELEGRAM_API_ID }} \
-          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \
-          $DEFINE
+          -D TDESKTOP_API_HASH=${{ secrets.TELEGRAM_API_HASH }} \$DEFINE
 
           cmake --build ../out --config Release --parallel
 

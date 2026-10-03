@@ -1,7 +1,7 @@
-#define MyAppShortName "64Gram"
-#define MyAppName "64Gram Desktop"
-#define MyAppPublisher "64Gram"
-#define MyAppURL "https://github.com/TDesktop-x64"
+#define MyAppShortName "NFGram"
+#define MyAppName "NFGram"
+#define MyAppPublisher "NFGram"
+#define MyAppURL "https://github.com/frknkrc44/NFGram"
 #define MyAppExeName "Telegram.exe"
 #define MyAppId "9DB6C981-7FD2-41B5-AEF2-20C933FD3F21"
 #define CurrentYear GetDateTimeString('yyyy','','')
@@ -37,11 +37,11 @@ WizardStyle=modern
 
 #ifndef MyOutputBaseFilename
   #if MyBuildTarget == "winarm"
-    #define MyOutputBaseFilename "64Gram-setup-arm64." + MyAppVersionFull
+    #define MyOutputBaseFilename "NFGram-setup-arm64." + MyAppVersionFull
   #elif MyBuildTarget == "win64"
-    #define MyOutputBaseFilename "64Gram-setup-x64." + MyAppVersionFull
+    #define MyOutputBaseFilename "NFGram-setup-x64." + MyAppVersionFull
   #else
-    #define MyOutputBaseFilename "64Gram-setup." + MyAppVersionFull
+    #define MyOutputBaseFilename "NFGram-setup." + MyAppVersionFull
   #endif
 #endif
 OutputBaseFilename={#MyOutputBaseFilename}

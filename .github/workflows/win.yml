@@ -1,4 +1,8 @@
-name: Windows.
+name: Windows
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   push:
@@ -47,7 +51,7 @@ on:
 jobs:
   windows:
     name: Windows
-    runs-on:  ${{ case(matrix.arch == 'arm64', 'windows-11-arm', 'windows-2022') }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'windows-11-arm' || 'windows-2022' }}
     strategy:
       matrix:
         arch: [x64_x86, x64]
@@ -103,7 +107,7 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           sdk: ${{ env.SDK }}
-          toolset: ${{ case(matrix.arch == 'arm64', '', '14.44') }}
+          toolset: ${{ matrix.arch == 'arm64' && '' || '14.44' }}
 
       - name: NuGet sources.
         run: |

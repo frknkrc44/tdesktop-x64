@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=64Gram Desktop
-Comment=Unofficial desktop version of Telegram messaging app
+Name=NFGram
+Comment=A third-party Telegram client based on 64Gram and Telegram Desktop
 TryExec=Telegram
 Exec=Telegram -- %U
 Icon=org.telegram.desktop
 Terminal=false
-StartupWMClass=64Gram
+StartupWMClass=NFGram
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;

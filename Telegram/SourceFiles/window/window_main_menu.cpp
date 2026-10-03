@@ -385,7 +385,7 @@ MainMenu::MainMenu(
 	parentResized();
 
 	_telegram->setMarkedText(tr::link(
-		u"64Gram Desktop"_q,
+		u"NFGram"_q,
 		u"https://desktop.telegram.org"_q));
 	_telegram->setLinksTrusted();
 	// The canary version is too long for the "Version {version}" form.

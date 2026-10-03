@@ -1,5 +1,5 @@
 {
-    "lng_intro_about2": "Welcome to the 64Gram Desktop app.\nIt's fast and secure.",
+    "lng_intro_about2": "Welcome to NFGram.\nIt's fast and secure.",
 
     "lng_settings_enhanced": "Enhanced Settings",
     "lng_settings_network": "Network",
@@ -131,7 +131,7 @@
     "lng_go_to_first_message": "Go to first message",
 
     "lng_proxy_remove_all": "Remove all proxies",
-    
+
     "lng_copy_profile_id": "ID copied to clipboard.",
 
     "lng_group_requests_ban": "Ban",

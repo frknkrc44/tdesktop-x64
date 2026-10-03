@@ -1,6 +1,6 @@
 /*
-This file is part of 64Gram Desktop fork,
-the unofficial app based on Telegram Desktop.
+This file is part of NFGram,
+the unofficial app based on Telegram Desktop and 64Gram.
 For license and copyright information please follow this link:
 https://github.com/frknkrc44/tdesktop-x64/blob/dev/LEGAL
 */

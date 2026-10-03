@@ -421,7 +421,7 @@ StartResult Start() {
 		fclose(f);
 
 		LOG(("Opened '%1' for reading, the previous "
-			"64Gram Desktop launch was not finished properly :( "
+			"NFGram top launch was not finished properly :( "
 			"Crash log size: %2").arg(ReportPath).arg(lastdump.size()));
 
 		return lastdump;
