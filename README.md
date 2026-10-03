@@ -6,7 +6,7 @@ We forked 64Gram from [v1.1.58](https://github.com/TDesktop-x64/tdesktop/release
 
 Our code has diverged since then, and while we share a common base, we have fixed bugs and implemented new ideas completely independently of Upstream. We have not performed an upstream merge since we started, pulling updates only from Telegram Desktop.
 
-[![Preview of 64Gram][preview_image]][preview_image_url]
+[![Preview of NFGram][preview_image]][preview_image_url]
 
 ## Project Goal
 
