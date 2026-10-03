@@ -1,19 +1,20 @@
-﻿# 64Gram – Based on [Telegram Desktop](https://github.com/telegramdesktop/tdesktop)
+﻿# NFGram - A third-party Telegram client based on 64Gram and Telegram Desktop
 
-The source code is published under GPLv3 with OpenSSL exception, the license is available [here][license].
+## About Us
+
+We forked 64Gram from [v1.1.58](https://github.com/TDesktop-x64/tdesktop/releases/tag/v1.1.58).
+
+Our code has diverged since then, and while we share a common base, we have fixed bugs and implemented new ideas completely independently of Upstream. We have not performed an upstream merge since we started, pulling updates only from Telegram Desktop.
 
 [![Preview of 64Gram][preview_image]][preview_image_url]
 
 ## Project Goal
 
-Provide Windows 64bit build with some enhancements.
-
-~~Cause official Telegram Desktop do not provide Windows 64bit build, so [Project TDesktop x64](https://github.com/TDesktop-x64) is aimed at provide Windows native x64 build(with few enhancements) to everybody.~~
-
-## Roadmap
-
-No Roadmap? Yes.
-
+- Offer a useful, actively maintained Telegram client with all changes being open source and verifiable.
+- Leave a ready-to-use base open to contributors, so that a surprise discontinuation does not extinguish the project's flame.
+- Incorporate useful features from other forks whenever possible and necessary
+- Provide the user with a reliable and easy-to-use client
+  
 ## [Features](features.md)
 
 ## Supported systems
@@ -30,9 +31,9 @@ The latest version is available on the [Release](https://github.com/TDesktop-x64
 
 If you want to translate this project, **Just Do It!**
 
-Create a Pull Request: [Localization Repo](https://github.com/TDesktop-x64/Localization).
+Create a Pull Request: [Localization Repo](https://github.com/nubesurrealista/Localization).
 
-**Here is a project [translation template](https://github.com/TDesktop-x64/Localization/blob/master/en.json).**
+**Template: [English template](https://github.com/nubesurrealista/Localization/blob/master/en.json).**
 
 You can find a language ID on Telegram's log.txt
 
@@ -73,21 +74,14 @@ Then your language translation filename is `de.json` or something like that.
 * [Windows (32-bit and 64-bit)][win]
 * [macOS][mac]
 * [GNU/Linux using Docker][linux]
-
-## Links
-
-* [Official Telegram Channel](https://t.me/tg_x64)
-* [Official discussion group](https://t.me/tg_x64_chat)
-
+  
 ## Credits
 
+* [64Gram](https://github.com/TDesktop-x64/tdesktop) for its original base that allowed us to work on this
 * [dic1911](https://github.com/dic1911) for Google Translate API code
 * [nubesurrealista](https://github.com/nubesurrealista) for CI optimizations
 
-## Sponsors
-<a href="https://www.jetbrains.com/?from=64Gram">
-     <img src="https://www.jetbrains.com/icon-512.png"  alt="JetBrains" width="150"/>
-</a>
+The source code is published under GPLv3 with OpenSSL exception, the license is available [here][license].
 
 [//]: # (LINKS)
 [license]: LICENSE
