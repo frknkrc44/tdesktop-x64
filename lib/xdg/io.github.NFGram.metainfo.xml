@@ -72,10 +72,10 @@
         <content_attribute id="money-gambling">none</content_attribute>
         <content_attribute id="money-advertising">moderate</content_attribute>
     </content_rating>
-    <launchable type="desktop-id">io.github.NFGram.TDesktop.desktop</launchable>
+    <launchable type="desktop-id">io.github.NFGram.desktop</launchable>
     <provides>
         <binary>telegram-desktop</binary>
-        <dbus type="session">io.github.NFGram.TDesktop</dbus>
+        <dbus type="session">io.github.NFGram</dbus>
         <mediatype>x-scheme-handler/tg</mediatype>
     </provides>
 </component>
