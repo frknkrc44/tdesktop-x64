@@ -91,5 +91,5 @@ The source code is published under GPLv3 with OpenSSL exception, the license is 
 [win]: docs/building-win.md
 [mac]: docs/building-mac.md
 [linux]: docs/building-linux.md
-[preview_image]: https://github.com/frknkrc44/NFGram/blob/dev/docs/assets/preview.png "Preview of NFGram"
-[preview_image_url]: https://raw.githubusercontent.com/frknkrc44/NFGram/refs/heads/dev/docs/assets/preview.png
+[preview_image]: docs/assets/preview.png "Preview of NFGram"
+[preview_image_url]: docs/assets/preview.png
