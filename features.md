@@ -4,7 +4,7 @@
 
 1. Show Chat ID
 2. Show admin titles in member list
-3. Upload/Download Boost Setting
+3. Upload Boost Setting
 4. Show chat restriction reason on profile page
 5. Ban members option in Recent Actions
 6. Always show discuss button if channel has discussion group
@@ -66,7 +66,8 @@
 62. Sticker pack owner info
 63. Disable Premium/Stars Annoyance
 64. Google Translate support
-65. Mutual contact indicator in contacts list from [Yurigram](https://github.com/Revincx/yurigram/commit/025d3534cfc0592c6cdd0ebcbedb122e4510ddf7)
-66. Join group button in discussion group profile box from [Yurigram](https://github.com/Revincx/yurigram/commit/efac2208b0e6f87c77f48b42c52ba3d6216a3628)
-67. Show apply_to_join button if discussion group needs request to join in group profile from [Yurigram](https://github.com/Revincx/yurigram/commit/99d0987b74e3a9a00afc527561c6ee4b76da37d3)
-68. Hide similar channels on join message from [Yukigram (Legacy)](https://github.com/yukigram/yukigram-legacy/commit/5ab13301e60cdd98e8933da41ed3d82d89246e09)
+65. Translate before send
+66. Mutual contact indicator in contacts list from [Yurigram](https://github.com/Revincx/yurigram/commit/025d3534cfc0592c6cdd0ebcbedb122e4510ddf7)
+67. Join group button in discussion group profile box from [Yurigram](https://github.com/Revincx/yurigram/commit/efac2208b0e6f87c77f48b42c52ba3d6216a3628)
+68. Show apply_to_join button if discussion group needs request to join in group profile from [Yurigram](https://github.com/Revincx/yurigram/commit/99d0987b74e3a9a00afc527561c6ee4b76da37d3)
+69. Hide similar channels on join message from [Yukigram (Legacy)](https://github.com/yukigram/yukigram-legacy/commit/5ab13301e60cdd98e8933da41ed3d82d89246e09)
