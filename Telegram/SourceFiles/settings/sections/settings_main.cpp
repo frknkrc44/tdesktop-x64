@@ -448,7 +448,7 @@ void BuildSectionButtons(SectionBuilder &builder) {
 		.title = tr::lng_settings_enhanced(),
 		.targetSection = Enhanced::Id(),
 		.icon = { &st::menuIconManage },
-		.keywords = { u"enhanced"_q, u"64gram"_q },
+		.keywords = { u"enhanced"_q, u"NFGram"_q },
 	});
 
 	builder.addButton({
