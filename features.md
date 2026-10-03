@@ -71,3 +71,4 @@
 67. Join group button in discussion group profile box from [Yurigram](https://github.com/Revincx/yurigram/commit/efac2208b0e6f87c77f48b42c52ba3d6216a3628)
 68. Show apply_to_join button if discussion group needs request to join in group profile from [Yurigram](https://github.com/Revincx/yurigram/commit/99d0987b74e3a9a00afc527561c6ee4b76da37d3)
 69. Hide similar channels on join message from [Yukigram (Legacy)](https://github.com/yukigram/yukigram-legacy/commit/5ab13301e60cdd98e8933da41ed3d82d89246e09)
+70. Hide Recent Stickers (Set it to 0)
