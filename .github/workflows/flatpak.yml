@@ -10,7 +10,7 @@ on:
 
 jobs:
   flatpak:
-    name: Package 64Gram
+    name: Package NFGram
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -33,30 +33,12 @@ jobs:
           name: Telegram-Desktop
           path: bin_archive
 
-      - name: Prepare Assets
-        run: |
-          cat <<EOT > org.frknkrc44.Telegram.desktop
-          [Desktop Entry]
-          Name=64Gram
-          GenericName=Telegram Desktop fork
-          GenericName[es]=Cliente no oficial basado en tg Desktop
-          Comment=64Gram Desktop Messenger
-          Comment[es]=Fork de TG Desktop
-          Exec=Telegram -- %u
-          Icon=org.frknkrc44.Telegram
-          Terminal=false
-          Type=Application
-          Categories=Network;InstantMessaging;
-          StartupWMClass=Telegram
-          MimeType=x-scheme-handler/tg;
-          EOT
-
       - name: Create Flatpak Manifest
         run: |
-          cat <<EOF > org.frknkrc44.Telegram.yml
-          app-id: org.frknkrc44.Telegram
+          cat <<EOF > io.github.NFGram.yml
+          app-id: io.github.NFGram
           runtime: org.gnome.Platform
-          runtime-version: '48'
+          runtime-version: '51'
           sdk: org.gnome.Sdk
           command: Telegram
           finish-args:
@@ -66,10 +48,13 @@ jobs:
             - --socket=fallback-x11
             - --socket=pulseaudio
             - --device=all
+            - --system-talk-name=org.bluez
             - --talk-name=org.freedesktop.Notifications
             - --talk-name=org.gnome.Mutter.IdleMonitor
             - --talk-name=org.kde.StatusNotifierWatcher
             - --talk-name=com.canonical.AppMenu.Registrar
+            - --talk-name=com.canonical.indicator.application
+            - --talk-name=org.ayatana.indicator.application
             - --talk-name=org.sigxcpu.Feedback
             - --filesystem=home
             - --unset-env=QT_PLUGIN_PATH
@@ -80,8 +65,8 @@ jobs:
                 - mkdir -p /app/bin /app/share/applications /app/share/icons/hicolor/512x512/apps/
                 - cp Telegram_bin /app/bin/Telegram
                 - chmod +x /app/bin/Telegram
-                - cp app_icon.png /app/share/icons/hicolor/512x512/apps/org.frknkrc44.Telegram.png
-                - cp org.frknkrc44.Telegram.desktop /app/share/applications/org.frknkrc44.Telegram.desktop
+                - cp app_icon.png /app/share/icons/hicolor/512x512/apps/io.github.NFGram.png
+                - cp desktop_file.desktop /app/share/applications/io.github.NFGram.desktop
               sources:
                 - type: file
                   path: bin_archive/Telegram
@@ -90,16 +75,17 @@ jobs:
                   path: Telegram/Resources/art/icon512.png
                   dest-filename: app_icon.png
                 - type: file
-                  path: org.frknkrc44.Telegram.desktop
+                  path: lib/xdg/io.github.NFGram.desktop
+                  dest-filename: desktop_file.desktop
           EOF
 
       - name: Build Flatpak Bundle
         run: |
-          flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir org.frknkrc44.Telegram.yml
-          flatpak build-bundle repo 64Gram-fork.flatpak org.frknkrc44.Telegram
+          flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean --repo=repo build_dir io.github.NFGram.yml
+          flatpak build-bundle repo NFGram.flatpak io.github.NFGram
 
       - name: Upload Final Flatpak
         uses: actions/upload-artifact@v7
         with:
-          name: 64Gram-Flatpak
-          path: 64Gram-fork.flatpak
+          name: NFGram-Flatpak
+          path: NFGram.flatpak

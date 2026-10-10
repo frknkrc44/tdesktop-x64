@@ -1,0 +1,102 @@
+name: AppImage Packager AnyLinux
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch: null
+  workflow_run:
+    workflows:
+      - Linux Build
+    types:
+      - completed
+
+jobs:
+  build:
+    name: "Package NFGram AnyLinux (${{ matrix.arch }})"
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            arch: x86_64
+          - runs-on: ubuntu-24.04-arm
+            arch: aarch64
+    container:
+      image: ghcr.io/pkgforge-dev/archlinux:latest
+      options: '--privileged'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Preparing Container
+        uses: pkgforge-dev/anylinux-setup-action@v2
+
+      - name: Install Base System Dependencies
+        run: |
+          pacman -Syu --noconfirm \
+            desktop-file-utils \
+            zsync \
+            patchelf \
+            geoclue \
+            gst-libav \
+            gst-plugins-base \
+            gst-plugins-bad \
+            gst-plugins-good \
+            gst-plugin-va \
+            pipewire-audio \
+            pipewire-jack
+
+      - name: Install Debloated Packages
+        run: |
+          get-debloated-pkgs --add-common --prefer-nano ffmpeg-mini webkit2gtk-4.1-mini
+
+      - name: Download Latest Binary Artifact
+        uses: dawidd6/action-download-artifact@v20
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: linux.yml
+          name: Telegram-Desktop
+          repo: ${{ github.repository }}
+          workflow_conclusion: success
+          path: bin_archive
+
+      - name: Prepare Workspace and Tools
+        run: |
+          chmod +x bin_archive/Telegram
+          mv bin_archive/Telegram /usr/bin/Telegram
+
+      - name: Make AppImage
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ANYLINUX_LIB: 1
+          DEPLOY_LOCALE: 1
+          DEPLOY_OPENGL: 1
+          DEPLOY_PIPEWIRE: 1
+        run: |
+          export ARCH=$(uname -m)
+          export VERSION=$(date +%Y%m%d)
+          export OUTPATH="./dist"
+          export UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
+          export ADD_HOOKS="self-updater.hook"
+          export ICON="https://raw.githubusercontent.com/telegramdesktop/tdesktop/refs/heads/dev/Telegram/Resources/art/icon256.png"
+          export DESKTOP="lib/xdg/io.github.NFGram.desktop"
+          export STRIP=1
+
+          quick-sharun \
+            /usr/bin/Telegram \
+            /usr/lib/libwayland-*.so* \
+            /usr/lib/libgeoclue*.so* \
+            /usr/lib/libwebkit2gtk-4.1.so*
+
+          echo 'DESKTOPINTEGRATION=0' >> ./AppDir/.env
+
+          quick-sharun --make-appimage
+          quick-sharun --test ./dist/*.AppImage
+
+      - name: Upload AppImage Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: NFGram-AnyLinux-AppImage-${{ matrix.arch }}
+          path: ./dist/*

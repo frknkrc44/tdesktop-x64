@@ -87,7 +87,7 @@
   </qresource>
   <qresource prefix="/misc">
     <file alias="default_shortcuts-custom.json">../../default_shortcuts-custom.json</file>
-    <file alias="io.github.tdesktop_x64.TDesktop.desktop">../../../../lib/xdg/io.github.tdesktop_x64.TDesktop.desktop</file>
+    <file alias="io.github.NFGram.desktop">../../../../lib/xdg/io.github.NFGram.desktop</file>
   </qresource>
   <qresource prefix="/localization">
     <file alias="en.json">../../langs/localization/en.json</file>

@@ -294,7 +294,7 @@ namespace EnhancedSettings {
 			return;
 		}
 		const char *defaultHeader = R"HEADER(
-// This is a list of default options for 64Gram Desktop
+// This is a list of default options for NFGram
 // Please don't modify it, its content is not used in any way
 // You can place your own options in the 'enhanced-settings-custom.json' file
 )HEADER";
