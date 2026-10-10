@@ -1,4 +1,4 @@
-﻿# NFGram - A third-party Telegram client based on 64Gram and Telegram Desktop
+# NFGram - A third-party Telegram client based on 64Gram and Telegram Desktop
 
 ## About Us
 
@@ -69,6 +69,8 @@ Then your language translation filename is `de.json` or something like that.
 - CMake ([New BSD License](https://github.com/Kitware/CMake/blob/master/Copyright.txt))
 - Hunspell ([LGPL](https://github.com/hunspell/hunspell/blob/master/COPYING.LESSER))
 - Ada ([Apache License 2.0](https://github.com/ada-url/ada/blob/main/LICENSE-APACHE))
+- zxcvbn-c ([MIT License](https://github.com/tsyrogit/zxcvbn-c/blob/master/LICENSE.txt))
+- FrequencyWords by Hermit Dave ([Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/))
 
 </details>
 
